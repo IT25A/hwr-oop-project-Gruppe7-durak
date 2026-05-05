@@ -17,9 +17,5 @@ class PlayerHand(
 	val id: PlayerId,
 	val cards: MutableList<Card> = mutableListOf()
 ) {
-	/**
-	
-	Fügt der Hand eine einzelne Karte hinzu.*/
-	fun add(card: Card) {
-		cards.add(card)}
+
 }

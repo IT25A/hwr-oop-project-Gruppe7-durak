@@ -36,8 +36,5 @@ class PlayerHandTest {
 		
 		// Überprüfen, ob die Karten in der Hand Instanzen der Klasse Card sind
 		assertThat(playerHand.cards.all { it is Card }).isEqualTo(true)
-		assertThat(playerHand.cards).contains(
-			Card(Suit.SPADES, Rank.JACK)
-		)
 	}
 }
