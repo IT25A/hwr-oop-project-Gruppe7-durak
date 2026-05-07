@@ -3,15 +3,15 @@ package hwr.oop.examples.template.core
 import org.junit.jupiter.api.Test
 import org.assertj.core.api.Assertions.assertThat
 
-class GameStateTest {
+class GameStatusTest {
 	
 	@Test
 	fun `both game states exist`(){
 		//given
 		//when
-		val gameState = GameState.entries.toTypedArray()
+		val gameStatus = GameStatus.entries.toTypedArray()
 		//then
-		assertThat(gameState).containsExactlyInAnyOrderElementsOf(listOf(GameState.IN_PROGRESS, GameState.FINISHED))
+		assertThat(gameStatus).containsExactlyInAnyOrderElementsOf(listOf(GameStatus.IN_PROGRESS, GameStatus.FINISHED))
 		
 	}
 }
