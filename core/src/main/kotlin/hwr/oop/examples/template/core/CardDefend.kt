@@ -3,8 +3,8 @@ package hwr.oop.examples.template.core
 
 class CardDefend() {
 	companion object {
-		private var firstCard: Card? = null
-		private var secondCard: Card? = null
+		internal var firstCard: Card? = null
+		internal var secondCard: Card? = null
 		
 		fun compareCards(firstCard: Card, secondCard: Card): Card {
 			this.firstCard = firstCard

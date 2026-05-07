@@ -8,6 +8,26 @@ import org.junit.jupiter.api.assertThrows
 class CardCompareTest {
 	
 	@Test
+	fun `CardDefend exists`(){
+		//given
+		//when
+		val cardDefend = CardDefend()
+		//then
+		assertThat(cardDefend).isNotNull()
+	}
+	
+	@Test
+	fun`CardDefend can hold two cards`(){
+		//given
+		val firstCard = Card(Suit.HEARTS, Rank.KING)
+		val secondCard = Card(Suit.SPADES, Rank.QUEEN)
+		//when
+		CardDefend.compareCards(firstCard, secondCard)
+		//then
+		assertEquals(firstCard, CardDefend.firstCard)
+		assertEquals(secondCard, CardDefend.secondCard)
+	}
+	@Test
 	fun `first card's rank is higher, first card wins`() {
 		//given
 		val firstCard = Card(Suit.HEARTS, Rank.KING)
