@@ -15,15 +15,17 @@ data class MutableDeck(
 data class MutableDeck(
 	val cards: MutableList<Card> = mutableListOf()
 ) {
-
+	
 	fun draw(): Card? {
-		return if (cards.isNotEmpty()) cards.removeAt(0) else null}
+		return if (cards.isNotEmpty()) cards.removeAt(0) else null
+	}
 	
 	fun dealTo(playerHand: PlayerHand, count: Int) {
 		repeat(count) {
 			val card = draw()
 			if (card != null) {
-				playerHand.cards.add(card)}
+				playerHand.cards.add(card)
+			}
 		}
 	}
 }

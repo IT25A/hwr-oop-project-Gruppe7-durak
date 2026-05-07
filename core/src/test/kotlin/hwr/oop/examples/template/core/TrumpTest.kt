@@ -12,11 +12,25 @@ class TrumpTest {
 		val initialDeckSize = deck.cards.size
 		
 		// when
-		val trump = Trump.drawFromDeck(deck)
+		val (updatedDeck, trump) = Trump.drawFromDeck(deck)
 		val trumpSuit = trump.suit()
 		
 		// then
 		assertThat(trumpSuit).isIn(*Suit.entries.toTypedArray())
-		assertThat(deck.cards.size).isEqualTo(initialDeckSize - 1) // One card should be drawn
+		assertThat(updatedDeck.cards.size).isEqualTo(initialDeckSize) // Deck size unchanged (card moved to end)
+	}
+	
+	@Test
+	fun `trump card is put to the end of the deck `() {
+		// given
+		val deck = Deck.createRandomDeck().toMutableDeck()
+		
+		// when
+		val originalFirstCard = deck.cards.first()
+		val (updatedDeck, trumpSuit) = Trump.drawFromDeck(deck)
+		val finalLastCard = updatedDeck.cards.last()
+		
+		// then
+		assertThat(originalFirstCard).isEqualTo(finalLastCard)
 	}
 }
