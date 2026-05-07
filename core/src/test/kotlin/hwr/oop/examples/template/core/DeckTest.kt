@@ -71,7 +71,7 @@ class DeckTest {
 
 		// Check that each suit-rank combination appears exactly once
 		val cardSet = cards.toSet()
-		assertThat(cardSet).hasSize(36) // All combinations should be unique
+		assertThat(cardSet).doesNotHaveDuplicates().hasSize(36) // All combinations should be unique
 	}
 
 	@Test
