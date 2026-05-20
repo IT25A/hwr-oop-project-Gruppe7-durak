@@ -1,14 +1,12 @@
 package hwr.oop.examples.template.core
 
 import org.assertj.core.api.Assertions.assertThat
-import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Test
-import org.junit.jupiter.api.assertThrows
 
 class CardCompareTest {
 	
 	@Test
-	fun `CardDefend exists`(){
+	fun `CardDefend exists and can be created`(){
 		//given
 		//when
 		val cardDefend = CardDefend()
@@ -17,50 +15,31 @@ class CardCompareTest {
 	}
 	
 	@Test
-	fun`CardDefend can hold two cards`(){
+	fun `CardDefend can hold cards`(){
 		//given
 		val firstCard = Card(Suit.HEARTS, Rank.KING)
 		val secondCard = Card(Suit.SPADES, Rank.QUEEN)
+		val cardDefend = CardDefend()
+		
 		//when
-		CardDefend.compareCards(firstCard, secondCard)
-		//then
-		assertEquals(firstCard, CardDefend.firstCard)
-		assertEquals(secondCard, CardDefend.secondCard)
-	}
-	@Test
-	fun `first card's rank is higher, first card wins`() {
-		//given
-		val firstCard = Card(Suit.HEARTS, Rank.KING)
-		val secondCard = Card(Suit.HEARTS, Rank.JACK)
-		//when
-		val result = CardDefend.compareCards(firstCard, secondCard)
+		cardDefend.add(firstCard)
+		cardDefend.add(secondCard)
 		
 		//then
-		assertThat(result).isEqualTo(firstCard)
+		assertThat(cardDefend.cards()).containsExactly(firstCard, secondCard)
 	}
 	
 	@Test
-	fun `second card's rank is higher, second card wins`() {
+	fun `CardDefend can be cleared`(){
 		//given
-		val firstCard = Card(Suit.HEARTS, Rank.JACK)
-		val secondCard = Card(Suit.HEARTS, Rank.KING)
+		val card = Card(Suit.HEARTS, Rank.KING)
+		val cardDefend = CardDefend()
+		cardDefend.add(card)
+		
 		//when
-		val result = CardDefend.compareCards(firstCard, secondCard)
+		cardDefend.clear()
 		
 		//then
-		assertThat(result).isEqualTo(secondCard)
-	}
-	
-	@Test
-	fun `both card's rank is equal, we get an exception`() {
-		//given
-		val firstCard = Card(Suit.HEARTS, Rank.KING)
-		val secondCard = Card(Suit.SPADES, Rank.KING)
-		
-		//when/then
-		val exception = assertThrows<Exception> {
-			CardDefend.compareCards(firstCard, secondCard)
-		}
-		assertThat(exception.message).isEqualTo("Trump is not implemented yet")
+		assertThat(cardDefend.cards()).isEmpty()
 	}
 }
