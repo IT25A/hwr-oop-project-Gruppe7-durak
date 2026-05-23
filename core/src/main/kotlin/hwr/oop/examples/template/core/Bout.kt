@@ -69,16 +69,15 @@ class Bout(
 	// Auflösen der Runde
 	fun resolve(): BoutResult {
 		if (isFullyDefended()) {
-			// verteidigt: sichere alle Tischkarten in tablePile (für späteres finalisieren)
-			tablePile.addAll(attackStack.cards())
-			tablePile.addAll(defendStack.cards())
-			// wir lassen attackStack/defendStack leer, damit promote/weiteres Arbeiten klar ist
-			attackStack.clear()
-			defendStack.clear()
-			pairings.clear()
-			return BoutResult(defenderWon = true, tableCards = tablePile.toList(), winner = defender)
+			// Verteidiger hat gewonnen
+			// WICHTIG: nicht sofort leeren! Caller kann noch promoteDefendToAttack() aufrufen.
+			// Sichere die Tischkarten in tablePile, aber lasse attackStack/defendStack vorhanden.
+			val tableCards = (attackStack.cards() + defendStack.cards()).toList()
+			tablePile.addAll(tableCards)
+			// Stacks nicht leeren — Caller macht das nach promote/finalize
+			return BoutResult(defenderWon = true, tableCards = tableCards, winner = defender)
 		} else {
-			// Angreifer hat gewonnen: Verteidiger nimmt ALLE Tisch-Karten (inkl. bereits gesicherter)
+			// Angreifer hat gewonnen: Verteidiger nimmt ALLE Tisch-Karten
 			val allToTake = mutableListOf<Card>()
 			allToTake.addAll(tablePile)
 			allToTake.addAll(attackStack.cards())
