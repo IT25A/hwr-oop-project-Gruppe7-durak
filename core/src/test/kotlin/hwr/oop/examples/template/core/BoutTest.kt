@@ -70,21 +70,17 @@ class BoutTest {
 	}
 	
 	@Test
-	fun `defending card is not contained in defender hand, return false`() {
+	fun `defending card is not contained in defending stack, throw DefendingCardException`() {
 		//given
-		
 		val attacker = PlayerHand(PlayerId("Attacker"))
 		attacker.cards.add(Card(Suit.SPADES, Rank.SIX))
 		val defender = PlayerHand(PlayerId("Defender"))
-		defender.cards.add(Card(Suit.SPADES, Rank.KING))
 		val bout = Bout(attacker, defender, Suit.HEARTS)
-		
 		//when
 		val card = Card(Suit.HEARTS, Rank.EIGHT)
-		val success = bout.defend(Card(Suit.SPADES, Rank.SIX), card)
-		
+		bout.attack(Card(Suit.SPADES, Rank.SIX))
 		//then
-		assertThat(success).isFalse
+		org.junit.jupiter.api.Assertions.assertThrows(DefendingCardException::class.java) { bout.defend(Card(Suit.SPADES,Rank.SIX), card) }
 	}
 	
 	@Test

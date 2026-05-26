@@ -25,7 +25,7 @@ class Bout(
 		// Prüfe ob die Angriffskarte auf dem Tisch liegt
 		if (!attackStack.cards().contains(attackingCard)) return false
 		// Prüfe ob die Verteidigungskarte in der Hand des Verteidigers ist
-		if (!defender.cards.contains(defendingCard)) return false
+		if (!defender.cards.contains(defendingCard)) throw DefendingCardException("The defender does not have the card")
 		// Prüfe ob diese Angriffskarte schon verteidigt wurde
 		if (pairings.containsKey(attackingCard)) return false
 		
