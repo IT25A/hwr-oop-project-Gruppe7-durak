@@ -83,5 +83,18 @@ class BasicCardCreationTest {
 		val ranks = cards.map { it.rank() }
 		assertThat(ranks).containsExactlyInAnyOrderElementsOf(allRanks)
 	}
+	
+	
+	@Test
+	fun `a card has a rank-strength between 6 and 14`() {
+		//given
+		
+	
+		//when
+		val card = Card(Suit.DIAMONDS, Rank.QUEEN)
+		val rankstrength = card.rank().strength
+		//then
+		assertThat(rankstrength).isBetween(6, 14)
+	}
 }
 

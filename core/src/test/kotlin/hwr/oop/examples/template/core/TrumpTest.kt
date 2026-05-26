@@ -33,4 +33,19 @@ class TrumpTest {
 		// then
 		assertThat(originalFirstCard).isEqualTo(finalLastCard)
 	}
+	
+	
+	@Test
+	fun `drawFromDeck on empty deck does not modify deck`() {
+		// given: ein leeres MutableDeck, sodass draw() null zurückgibt
+		val deck = MutableDeck(mutableListOf())
+		
+		// when / then: erwartet wird eine NullPointerException
+		org.junit.jupiter.api.Assertions.assertThrows(NullPointerException::class.java) {
+			Trump.drawFromDeck(deck)
+		}
+		
+		// danach: das Deck darf nicht verändert worden sein (original: leer)
+		assertThat(deck.cards).isEmpty()
+	}
 }
