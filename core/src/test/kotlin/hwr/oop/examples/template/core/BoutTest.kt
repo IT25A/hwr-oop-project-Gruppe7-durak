@@ -165,6 +165,7 @@ class BoutTest {
 		assertThat(result.defenderWon).isTrue
 		assertThat(result.tableCards).containsExactlyInAnyOrder(attackCard, defendCard)
 		assertThat(result.winner).isEqualTo(defender)
+		
 	}
 	
 	@Test
@@ -181,12 +182,15 @@ class BoutTest {
 		bout.attack(attackCard)
 		val defendCard = defender.cards.first()
 		val result = bout.resolve()
+		var result1 = listOf(Card(Suit.SPADES, Rank.NINE))
+		result1 = bout.tablePile()
 		
 		//then
 		assertThat(result.defenderWon).isFalse
 		assertThat(result.tableCards).isEmpty()
 		assertThat(result.winner).isEqualTo(attacker)
 		assertThat(defender.cards).contains(attackCard)
+		assertThat(result1).isEmpty()
 	}
 
 	@Test

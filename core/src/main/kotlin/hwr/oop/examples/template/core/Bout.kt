@@ -12,6 +12,8 @@ class Bout(
 	private val pairings: MutableMap<Card, Card> = mutableMapOf()
 	private val tablePile: MutableList<Card> = mutableListOf() // gesicherte Tisch-Karte
 	
+	fun tablePile(): List<Card> = tablePile
+	
 	// Angreifer spielt eine Karte
 	fun attack(card: Card): Boolean {
 		if (!attacker.cards.contains(card)) return false
