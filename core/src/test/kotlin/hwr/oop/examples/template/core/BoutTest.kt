@@ -189,7 +189,11 @@ class BoutTest {
 		assertThat(result.tableCards).isEmpty()
 		assertThat(result.winner).isEqualTo(attacker)
 		assertThat(defender.cards).contains(attackCard)
-		
+		/*
+		assertThat(bout.attackStack()).isEmpty()
+		assertThat(bout.defendStack()).isEmpty()
+		assertThat(bout.pairings()).isEmpty()
+		 */
 	}
 	
 	@Test
