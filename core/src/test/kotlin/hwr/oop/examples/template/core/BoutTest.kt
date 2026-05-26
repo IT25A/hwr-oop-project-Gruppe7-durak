@@ -182,16 +182,84 @@ class BoutTest {
 		bout.attack(attackCard)
 		val defendCard = defender.cards.first()
 		val result = bout.resolve()
-		var result1 = listOf(Card(Suit.SPADES, Rank.NINE))
-		result1 = bout.tablePile()
+		val result1 = listOf(Card(Suit.SPADES, Rank.NINE))
 		
 		//then
 		assertThat(result.defenderWon).isFalse
 		assertThat(result.tableCards).isEmpty()
 		assertThat(result.winner).isEqualTo(attacker)
 		assertThat(defender.cards).contains(attackCard)
-		assertThat(result1).isEmpty()
+		
 	}
+	
+	@Test
+	fun `attacker win clears the table pile`() {
+		//given
+		val attacker = PlayerHand(PlayerId("Attacker"))
+		attacker.cards.add(Card(Suit.SPADES, Rank.SIX))
+		attacker.cards.add(Card(Suit.SPADES, Rank.KING))
+		val defender = PlayerHand(PlayerId("Defender"))
+		defender.cards.add(Card(Suit.SPADES, Rank.KING))
+		val bout = Bout(attacker, defender, Suit.HEARTS)
+		
+		//when: defender wins first (tablePile gets filled)
+		val attackCard1 = Card(Suit.SPADES, Rank.SIX)
+		bout.attack(attackCard1)
+		val defendCard = Card(Suit.SPADES, Rank.KING)
+		bout.defend(attackCard1, defendCard)
+		bout.resolve()
+		
+		// tablePile is now filled
+		assertThat(bout.tablePile()).isNotEmpty()
+		
+		// then: attacker wins (should clear tablePile)
+		bout.promoteDefendToAttack()
+		val attackCard2 = Card(Suit.SPADES, Rank.KING)
+		bout.attack(attackCard2)
+		val result = bout.resolve()
+		
+		//then
+		assertThat(result.defenderWon).isFalse
+		assertThat(bout.tablePile()).isEmpty()
+	}
+	
+	@Test
+	fun `finalizeRound clears table pile and does not duplicate discard on repeated finalize`() {
+		// given: einfache erfolgreiche Verteidigung
+		val attackingCard = Card(Suit.HEARTS, Rank.SIX)
+		val defendingCard = Card(Suit.HEARTS, Rank.SEVEN)
+		
+		val attacker = PlayerHand(PlayerId("attacker"), mutableListOf(attackingCard))
+		val defender = PlayerHand(PlayerId("defender"), mutableListOf(defendingCard))
+		val bout = Bout(attacker, defender, Suit.CLUBS)
+		
+		// when: Angriff und erfolgreiche Verteidigung
+		assertThat(bout.attack(attackingCard)).isTrue()
+		assertThat(bout.defend(attackingCard, defendingCard)).isTrue()
+		
+		// resolve -> tableCards should be non-empty (sichert Tisch-Karten)
+		val result = bout.resolve()
+		assertThat(result.tableCards).isNotEmpty
+		
+		// finalizeRound: toDiscard = tablePile(2) + attackStack(1) + defendStack(1) => 4 Karten
+		val discard = DiscardPile()
+		bout.finalizeRound(discard)
+		
+		// nach erstem finalize: discard enthält die erwarteten Karten
+		assertThat(discard.cards()).isNotEmpty
+		assertThat(discard.cards().size).isEqualTo(4)
+		
+		// Stacks wurden zurückgesetzt (über reset())
+		assertThat(bout.getAttackStack().cards()).isEmpty()
+		assertThat(bout.getDefendStack().cards()).isEmpty()
+		
+		// zweiter Aufruf: im Original unverändert (bleibt 4); wenn tablePile.clear() entfernt wurde -> würde es 6
+		bout.finalizeRound(discard)
+		assertThat(discard.cards().size).isEqualTo(4)
+	}
+	
+
+	
 
 	@Test
 	fun `promote defended cards to attacks and finalize moves to discard`() {

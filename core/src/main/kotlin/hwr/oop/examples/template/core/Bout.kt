@@ -12,6 +12,9 @@ class Bout(
 	private val pairings: MutableMap<Card, Card> = mutableMapOf()
 	private val tablePile: MutableList<Card> = mutableListOf() // gesicherte Tisch-Karte
 	
+	fun attackStack(): List<AttackStack> = listOf(attackStack)
+	fun defendStack(): List<CardDefend> = listOf(defendStack)
+	fun pairings(): Map<Card, Card> = pairings
 	fun tablePile(): List<Card> = tablePile
 	
 	// Angreifer spielt eine Karte
