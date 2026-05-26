@@ -36,6 +36,58 @@ class BoutTest {
 	}
 	
 	@Test
+	fun `return is false if card is not in attacker hand`() {
+		//given
+		
+		val attacker = PlayerHand(PlayerId("Attacker"))
+		attacker.cards.add(Card(Suit.SPADES, Rank.SIX))
+		val defender = PlayerHand(PlayerId("Defender"))
+		val bout = Bout(attacker, defender, Suit.HEARTS)
+		
+		//when
+		val card = Card(Suit.HEARTS, Rank.EIGHT)
+		val success = bout.attack(card)
+		
+		//then
+		assertThat(success).isFalse
+	}
+	
+	@Test
+	fun `attacking card is not contained in attack stack, return false`() {
+		//given
+		
+		val attacker = PlayerHand(PlayerId("Attacker"))
+		attacker.cards.add(Card(Suit.SPADES, Rank.SIX))
+		val defender = PlayerHand(PlayerId("Defender"))
+		val bout = Bout(attacker, defender, Suit.HEARTS)
+		
+		//when
+		val card = Card(Suit.HEARTS, Rank.EIGHT)
+		val success = bout.defend(card, Card(Suit.HEARTS, Rank.NINE))
+		
+		//then
+		assertThat(success).isFalse
+	}
+	
+	@Test
+	fun `defending card is not contained in defender hand, return false`() {
+		//given
+		
+		val attacker = PlayerHand(PlayerId("Attacker"))
+		attacker.cards.add(Card(Suit.SPADES, Rank.SIX))
+		val defender = PlayerHand(PlayerId("Defender"))
+		defender.cards.add(Card(Suit.SPADES, Rank.KING))
+		val bout = Bout(attacker, defender, Suit.HEARTS)
+		
+		//when
+		val card = Card(Suit.HEARTS, Rank.EIGHT)
+		val success = bout.defend(Card(Suit.SPADES, Rank.SIX), card)
+		
+		//then
+		assertThat(success).isFalse
+	}
+	
+	@Test
 	fun `defender can beat a card with higher rank same suit`() {
 		//given
 		val attacker = PlayerHand(PlayerId("Attacker"))
@@ -55,6 +107,8 @@ class BoutTest {
 		assertThat(defender.cards).doesNotContain(defendCard)
 		assertThat(bout.getDefendStack().cards()).containsExactly(defendCard)
 	}
+	
+	
 	
 	@Test
 	fun `defender can beat non-trump with trump`() {

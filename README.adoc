@@ -9,7 +9,15 @@ Do not rely on it!
 
 == Feature Liste
 
-// TODO : Add a list of features that your project implements. This can be a simple bullet list or a tables
+Cards with rank and suit
+MutableDeck of cards, can be shuffled, drawn from and deal a card to player
+PlayerHand with ID and cards
+AttackStack and DefendStack for the current round
+DiscardPile for used cards
+Trump suit and card comparison logic
+Simple game logic for Durak (e.g., attack, defend, end turn)
+GameStatus for tracking game state (e.g., ongoing, finished)
+
 
 == Modulstruktur
 
