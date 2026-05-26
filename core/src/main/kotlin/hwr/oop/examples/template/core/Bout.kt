@@ -12,8 +12,8 @@ class Bout(
 	private val pairings: MutableMap<Card, Card> = mutableMapOf()
 	private val tablePile: MutableList<Card> = mutableListOf() // gesicherte Tisch-Karte
 	
-	fun attackStack(): List<AttackStack> = listOf(attackStack)
-	fun defendStack(): List<CardDefend> = listOf(defendStack)
+	fun getAttackStack(): AttackStack = attackStack
+	fun getDefendStack(): CardDefend = defendStack
 	fun pairings(): Map<Card, Card> = pairings
 	fun tablePile(): List<Card> = tablePile
 	
@@ -102,9 +102,6 @@ class Bout(
 		pairings.clear()
 	}
 	
-	// Getter für Tests/Debugging
-	fun getAttackStack(): AttackStack = attackStack
-	fun getDefendStack(): CardDefend = defendStack
 	
 	// Promoviere alle Verteidigungs-Karten zu neuen Angriffen (sie werden auf den Attack-Stack verschoben)
 	fun promoteDefendToAttack() {

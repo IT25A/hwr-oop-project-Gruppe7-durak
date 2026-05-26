@@ -165,7 +165,48 @@ class BoutTest {
 		assertThat(result.defenderWon).isTrue
 		assertThat(result.tableCards).containsExactlyInAnyOrder(attackCard, defendCard)
 		assertThat(result.winner).isEqualTo(defender)
+		assertThat(bout.pairings()).isNotEmpty
 		
+	}
+	
+	@Test
+	fun `resolve as attacker win clears pairings when there is at least one defended card`() {
+		// given: attacker has two cards, defender has one card to defend the first attack
+		val attacker = PlayerHand(PlayerId("Attacker"))
+		val cardA1 = Card(Suit.SPADES, Rank.SIX)
+		val cardA2 = Card(Suit.SPADES, Rank.SEVEN)
+		attacker.cards.add(cardA1)
+		attacker.cards.add(cardA2)
+		
+		val defender = PlayerHand(PlayerId("Defender"))
+		val defendCard = Card(Suit.SPADES, Rank.KING)
+		defender.cards.add(defendCard)
+		
+		val bout = Bout(attacker, defender, Suit.HEARTS)
+		
+		// when: first attack is defended -> pairings gets filled
+		assertThat(bout.attack(cardA1)).isTrue()
+		assertThat(bout.defend(cardA1, defendCard)).isTrue()
+		// ensure pairings is non-empty now
+		assertThat(bout.pairings()).isNotEmpty()
+		
+		// then: attacker plays a second attack that is NOT defended
+		assertThat(bout.attack(cardA2)).isTrue()
+		
+		// now resolve: not fully defended -> attacker wins -> resolve() calls reset()
+		val result = bout.resolve()
+		
+		// expectations: attacker won, and reset() must have cleared pairings
+		assertThat(result.defenderWon).isFalse
+		assertThat(bout.pairings()).isEmpty()
+		
+		// defender should have taken all table/stack cards
+		// (attackStack/defendStack reset by reset())
+		assertThat(bout.getAttackStack().cards()).isEmpty()
+		assertThat(bout.getDefendStack().cards()).isEmpty()
+		
+		// defender's hand should now contain the attacked cards + defended card
+		assertThat(defender.cards).contains(cardA1, cardA2, defendCard)
 	}
 	
 	@Test
@@ -182,18 +223,17 @@ class BoutTest {
 		bout.attack(attackCard)
 		val defendCard = defender.cards.first()
 		val result = bout.resolve()
-		val result1 = listOf(Card(Suit.SPADES, Rank.NINE))
 		
 		//then
 		assertThat(result.defenderWon).isFalse
 		assertThat(result.tableCards).isEmpty()
 		assertThat(result.winner).isEqualTo(attacker)
 		assertThat(defender.cards).contains(attackCard)
-		/*
-		assertThat(bout.attackStack()).isEmpty()
-		assertThat(bout.defendStack()).isEmpty()
+		
+		assertThat(bout.getAttackStack().cards().toList()).isEmpty()
+		assertThat(bout.getDefendStack().cards().toList()).isEmpty()
 		assertThat(bout.pairings()).isEmpty()
-		 */
+		
 	}
 	
 	@Test
