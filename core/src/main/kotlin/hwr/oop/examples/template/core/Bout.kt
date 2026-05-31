@@ -12,6 +12,11 @@ class Bout(
 	private val pairings: MutableMap<Card, Card> = mutableMapOf()
 	private val tablePile: MutableList<Card> = mutableListOf() // gesicherte Tisch-Karte
 	
+	fun getAttackStack(): AttackStack = attackStack
+	fun getDefendStack(): CardDefend = defendStack
+	fun pairings(): Map<Card, Card> = pairings
+	fun tablePile(): List<Card> = tablePile
+	
 	// Angreifer spielt eine Karte
 	fun attack(card: Card): Boolean {
 		if (!attacker.cards.contains(card)) return false
@@ -25,7 +30,7 @@ class Bout(
 		// Prüfe ob die Angriffskarte auf dem Tisch liegt
 		if (!attackStack.cards().contains(attackingCard)) return false
 		// Prüfe ob die Verteidigungskarte in der Hand des Verteidigers ist
-		if (!defender.cards.contains(defendingCard)) return false
+		if (!defender.cards.contains(defendingCard)) throw DefendingCardException("The defender does not have the card")
 		// Prüfe ob diese Angriffskarte schon verteidigt wurde
 		if (pairings.containsKey(attackingCard)) return false
 		
@@ -97,9 +102,6 @@ class Bout(
 		pairings.clear()
 	}
 	
-	// Getter für Tests/Debugging
-	fun getAttackStack(): AttackStack = attackStack
-	fun getDefendStack(): CardDefend = defendStack
 	
 	// Promoviere alle Verteidigungs-Karten zu neuen Angriffen (sie werden auf den Attack-Stack verschoben)
 	fun promoteDefendToAttack() {

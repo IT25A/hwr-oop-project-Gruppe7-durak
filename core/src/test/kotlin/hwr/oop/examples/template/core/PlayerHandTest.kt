@@ -4,20 +4,23 @@ import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Test
 
 class PlayerHandTest {
-	/*
-	@Test fun `player hand can have an ID`() {
-		// given
-		val size = 6
-		// when
-		val id = PlayerId("Alpha")
-		val cards = MutableDeck(deck).draw(size)
-		// then
-		assertThat(id).isEqualTo(PlayerId("Alpha"))
-		assertThat(cards).isEqualTo()
-	}
 	
-}
-*/
+	@Test
+	fun `player hand can have an ID`() { val expected = PlayerId("Alpha")
+		
+		//when
+		val hand = PlayerHand(expected)
+		
+		// prüft direkt die Getter-Rückgabe
+		assertThat(hand.id).isEqualTo(expected)
+	}
+	@Test
+	fun `player hand id is not empty`() {
+		val hand = PlayerHand(PlayerId("Alpha"))
+		
+		// falls eine Mutation die id als leeren Wert zurückgibt, schlägt dieser Test fehl
+		assertThat(hand.id).isNotEqualTo(PlayerId(""))
+	}
 	
 	@Test
 	fun `testplayer hand receives cards from mutable deck`() {
