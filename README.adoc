@@ -1,6 +1,4 @@
-= HWR OOP Lecture Project Template
-
-// TODO: Change headline to better fit your project!
+= HWR OOP Group 7 Durak Project
 
 This repository contains a student project created for an ongoing lecture on object-oriented programming with Kotlin at HWR Berlin (summer term 2026).
 
@@ -9,14 +7,14 @@ Do not rely on it!
 
 == Feature Liste
 
-Cards with rank and suit
-MutableDeck of cards, can be shuffled, drawn from and deal a card to player
-PlayerHand with ID and cards
-AttackStack and DefendStack for the current round
-DiscardPile for used cards
-Trump suit and card comparison logic
-Simple game logic for Durak (e.g., attack, defend, end turn)
-GameStatus for tracking game state (e.g., ongoing, finished)
+- Cards with rank and suit
+- MutableDeck of cards, can be shuffled, drawn from and deal a card to player
+- PlayerHand with ID and cards
+- AttackStack and DefendStack for the current round
+- DiscardPile for used cards
+- Trump suit and card comparison logic
+- Simple game logic for Durak (e.g., attack, defend, end turn)
+- GameStatus for tracking game state (e.g., ongoing, finished)
 
 
 == Modulstruktur
