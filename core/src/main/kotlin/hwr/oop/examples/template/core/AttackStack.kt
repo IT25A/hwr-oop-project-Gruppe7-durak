@@ -1,5 +1,5 @@
 package hwr.oop.examples.template.core
-
+//hier Mutable List
 class AttackStack(vararg initialCards: Card) {
 	private val cards: MutableList<Card> = initialCards.toMutableList()
 	

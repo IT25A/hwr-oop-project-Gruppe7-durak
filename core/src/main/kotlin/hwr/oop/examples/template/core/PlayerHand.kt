@@ -10,5 +10,8 @@ class PlayerHand(
 	//private machen, weil sonst schlecht
 	val cards: MutableList<Card> = mutableListOf()
 ) {
-
+	companion object {
+		
+		fun create(cards: List<Card>): PlayerHand = PlayerHand(cards.toMutableList())
+	}
 }
