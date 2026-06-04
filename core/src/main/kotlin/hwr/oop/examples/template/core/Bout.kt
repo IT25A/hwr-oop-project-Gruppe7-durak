@@ -1,8 +1,8 @@
 package hwr.oop.examples.template.core
 
 class Bout(
-	val attacker: PlayerHand,
-	val defender: PlayerHand,
+	var attacker: PlayerHand,
+	var defender: PlayerHand,
 	private val trump: Suit
 ) {
 	private val attackStack = AttackStack()
@@ -19,25 +19,20 @@ class Bout(
 	
 	// Angreifer spielt eine Karte
 	fun attack(card: Card): Boolean {
-		if (!attacker.cards.contains(card)) return false
-		attacker.cards.remove(card)
+		if (!attacker.contains(card)) throw AttackerDoesNotHaveCardException("Attacker does not have the card: $card")
+		attacker = attacker.without(card)
 		attackStack.add(card)
 		return true
 	}
 	
-	// Verteidiger versucht, eine Angriffskarte zu schlagen
 	fun defend(attackingCard: Card, defendingCard: Card): Boolean {
-		// Prüfe ob die Angriffskarte auf dem Tisch liegt
-		if (!attackStack.cards().contains(attackingCard)) return false
-		// Prüfe ob die Verteidigungskarte in der Hand des Verteidigers ist
-		if (!defender.cards.contains(defendingCard)) throw DefendingCardException("The defender does not have the card")
-		// Prüfe ob diese Angriffskarte schon verteidigt wurde
-		if (pairings.containsKey(attackingCard)) return false
+		if (!attackStack.cards().contains(attackingCard)) throw AttackStackDoesNotContainCardException("Attack stack does not contain the attacking card: $attackingCard")
+		if (!defender.contains(defendingCard)) throw DefenderDoesNotHaveCardException("Defender does not have the card: $defendingCard")
+		if (pairings.containsKey(attackingCard)) throw PairingCardWasAlreadyBeenDefendedException("The attacking card has already been defended: $attackingCard")
 		
-		// Vergleiche die Karten (Trump berücksichtigen)
 		val defendingWins = cardBeats(attackingCard, defendingCard)
 		if (defendingWins) {
-			defender.cards.remove(defendingCard)
+			defender = defender.without(defendingCard)
 			defendStack.add(defendingCard)
 			pairings[attackingCard] = defendingCard
 			return true
@@ -87,7 +82,7 @@ class Bout(
 			allToTake.addAll(tablePile)
 			allToTake.addAll(attackStack.cards())
 			allToTake.addAll(defendStack.cards())
-			defender.cards.addAll(allToTake)
+			defender = defender.withAdded(allToTake)
 			// alles zurücksetzen
 			tablePile.clear()
 			reset()
@@ -142,5 +137,5 @@ class Bout(
 data class BoutResult(
 	val defenderWon: Boolean,	// true wenn Verteidiger gewonnen, false wenn Angreifer
 	val tableCards: List<Card>,	// Karten die auf dem Tisch liegen (nur wenn Verteidiger gewonnen)
-	val winner: PlayerHand			// der Gewinner dieser Runde
+	val winner: PlayerHand	// der Gewinner dieser Runde
 )
