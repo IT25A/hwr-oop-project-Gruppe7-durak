@@ -100,8 +100,6 @@ class BoutTest {
 		assertThat(bout.getDefendStack().cards()).containsExactly(defendCard)
 	}
 	
-	
-	
 	@Test
 	fun `defender can beat non-trump with trump`() {
 		//given
@@ -203,7 +201,10 @@ class BoutTest {
 		//given
 		val attackCard = Card(Suit.SPADES, Rank.KING)
 		val attacker = PlayerHand.create(listOf(attackCard), PlayerId("Attacker"))
-		val defender = PlayerHand.create(listOf(Card(Suit.HEARTS, Rank.KING)), PlayerId("Defender")) // can't beat spades with non-trump hearts
+		val defender = PlayerHand.create(
+			listOf(Card(Suit.HEARTS, Rank.KING)),
+			PlayerId("Defender")
+		) // can't beat spades with non-trump hearts
 		val bout = Bout(attacker, defender, Suit.CLUBS)
 		
 		//when
@@ -287,9 +288,6 @@ class BoutTest {
 		assertThat(discard.cards().size).isEqualTo(4)
 	}
 	
-
-	
-
 	@Test
 	fun `promote defended cards to attacks and finalize moves to discard`() {
 		// given
@@ -298,27 +296,65 @@ class BoutTest {
 		val attacker = PlayerHand.create(listOf(attackCard), PlayerId("Attacker"))
 		val defender = PlayerHand.create(listOf(defendCard), PlayerId("Defender"))
 		val bout = Bout(attacker, defender, Suit.HEARTS)
-
+		
 		// when: attacker plays and defender successfully defends
 		bout.attack(attackCard)
 		bout.defend(attackCard, defendCard)
 		val result = bout.resolve()
-
+		
 		// defender won and table contains both cards
 		assertThat(result.defenderWon).isTrue
-
+		
 		// now promote defender cards to become attacks
 		bout.promoteDefendToAttack()
 		// the defend card should now be present in attack stack as a new attack
-		assertThat(bout.getAttackStack().cards()).contains(defendCard)
-
+		assertThat(bout.getAttackStack().cards()).containsExactly(defendCard)
+		assertThat(bout.getDefendStack().cards()).isEmpty()
+		
 		// finalize the round: create discard pile and move all table cards there
 		val discard = DiscardPile()
 		bout.finalizeRound(discard)
-
+		
 		// after finalize, discard pile contains previous table cards and stacks are cleared
 		assertThat(discard.cards()).contains(attackCard, defendCard)
 		assertThat(bout.getAttackStack().cards()).isEmpty()
 		assertThat(bout.getDefendStack().cards()).isEmpty()
 	}
+	
+	@Test
+	fun `Two equal cards return false`() {
+		
+		//given
+		val attackCard = Card(Suit.SPADES, Rank.KING)
+		val defendCard = Card(Suit.SPADES, Rank.KING)
+		val attacker = PlayerHand.create(listOf(attackCard), PlayerId("Attacker"))
+		val defender = PlayerHand.create(listOf(defendCard), PlayerId("Defender"))
+		val bout = Bout(attacker, defender, Suit.HEARTS)
+		
+		//when
+		bout.attack(attackCard)
+		val success = bout.defend(attackCard, defendCard)
+		
+		//then
+		assertThat(success).isFalse
+	}
+	
+	@Test
+	fun `Defender can not defend with lower rank`() {
+		
+		//given
+		val attackCard = Card(Suit.SPADES, Rank.KING)
+		val defendCard = Card(Suit.SPADES, Rank.NINE)
+		val attacker = PlayerHand.create(listOf(attackCard), PlayerId("Attacker"))
+		val defender = PlayerHand.create(listOf(defendCard), PlayerId("Defender"))
+		val bout = Bout(attacker, defender, Suit.HEARTS)
+		
+		//when
+		bout.attack(attackCard)
+		val success = bout.defend(attackCard, defendCard)
+		
+		//then
+		assertThat(success).isFalse
+	}
+	
 }

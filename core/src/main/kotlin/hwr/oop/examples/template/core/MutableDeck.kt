@@ -13,7 +13,7 @@ data class MutableDeck(
 */
 
 data class MutableDeck(
-	val cards: MutableList<Card> = mutableListOf()
+	val cards: MutableList<Card> = mutableListOf(),
 ) {
 	
 	fun draw(): Card? {

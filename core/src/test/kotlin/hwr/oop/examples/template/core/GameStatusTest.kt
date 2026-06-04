@@ -6,7 +6,7 @@ import org.assertj.core.api.Assertions.assertThat
 class GameStatusTest {
 	
 	@Test
-	fun `both game states exist`(){
+	fun `both game states exist`() {
 		//given
 		//when
 		val gameStatus = GameStatus.entries.toTypedArray()

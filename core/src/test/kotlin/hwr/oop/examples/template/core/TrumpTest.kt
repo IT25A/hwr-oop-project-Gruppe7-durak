@@ -34,7 +34,6 @@ class TrumpTest {
 		assertThat(originalFirstCard).isEqualTo(finalLastCard)
 	}
 	
-	
 	@Test
 	fun `drawFromDeck on empty deck does not modify deck`() {
 		// given: ein leeres MutableDeck, sodass draw() null zurückgibt

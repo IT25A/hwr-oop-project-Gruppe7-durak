@@ -3,7 +3,7 @@ package hwr.oop.examples.template.core
 class Bout(
 	var attacker: PlayerHand,
 	var defender: PlayerHand,
-	private val trump: Suit
+	private val trump: Suit,
 ) {
 	private val attackStack = AttackStack()
 	private val defendStack = CardDefend()
@@ -26,7 +26,9 @@ class Bout(
 	}
 	
 	fun defend(attackingCard: Card, defendingCard: Card): Boolean {
-		if (!attackStack.cards().contains(attackingCard)) throw AttackStackDoesNotContainCardException("Attack stack does not contain the attacking card: $attackingCard")
+		if (!attackStack.cards()
+				.contains(attackingCard)
+		) throw AttackStackDoesNotContainCardException("Attack stack does not contain the attacking card: $attackingCard")
 		if (!defender.contains(defendingCard)) throw DefenderDoesNotHaveCardException("Defender does not have the card: $defendingCard")
 		if (pairings.containsKey(attackingCard)) throw PairingCardWasAlreadyBeenDefendedException("The attacking card has already been defended: $attackingCard")
 		
@@ -97,14 +99,10 @@ class Bout(
 		pairings.clear()
 	}
 	
-	
 	// Promoviere alle Verteidigungs-Karten zu neuen Angriffen (sie werden auf den Attack-Stack verschoben)
 	fun promoteDefendToAttack() {
 		// 1) sichere die aktuellen Angriffs-Karten (alte Angriffe) in tablePile
 		val finishedAttacks = attackStack.cards()
-		if (finishedAttacks.isNotEmpty()) {
-			tablePile.addAll(finishedAttacks)
-		}
 		
 		// 2) entferne die alten Angriffe aus pairings (sie gelten nicht mehr)
 		finishedAttacks.forEach { pairings.remove(it) }
@@ -135,7 +133,7 @@ class Bout(
 
 // Datenklasse für das Ergebnis
 data class BoutResult(
-	val defenderWon: Boolean,	// true wenn Verteidiger gewonnen, false wenn Angreifer
-	val tableCards: List<Card>,	// Karten die auf dem Tisch liegen (nur wenn Verteidiger gewonnen)
-	val winner: PlayerHand	// der Gewinner dieser Runde
+	val defenderWon: Boolean,  // true wenn Verteidiger gewonnen, false wenn Angreifer
+	val tableCards: List<Card>,  // Karten die auf dem Tisch liegen (nur wenn Verteidiger gewonnen)
+	val winner: PlayerHand,  // der Gewinner dieser Runde
 )

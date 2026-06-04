@@ -4,8 +4,7 @@ import org.junit.jupiter.api.Test
 
 class DealTest {
 	@Test
-	fun `check if cards are actually removed`()
-	{
+	fun `check if cards are actually removed`() {
 		val deck = Deck.createRandomDeck().toMutableDeck()
 		
 		val card = deck.draw()

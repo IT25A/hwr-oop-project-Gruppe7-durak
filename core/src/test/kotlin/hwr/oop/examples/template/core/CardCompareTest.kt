@@ -6,7 +6,7 @@ import org.junit.jupiter.api.Test
 class CardCompareTest {
 	
 	@Test
-	fun `CardDefend exists and can be created`(){
+	fun `CardDefend exists and can be created`() {
 		//given
 		//when
 		val cardDefend = CardDefend()
@@ -15,7 +15,7 @@ class CardCompareTest {
 	}
 	
 	@Test
-	fun `CardDefend can hold cards`(){
+	fun `CardDefend can hold cards`() {
 		//given
 		val firstCard = Card(Suit.HEARTS, Rank.KING)
 		val secondCard = Card(Suit.SPADES, Rank.QUEEN)
@@ -30,7 +30,7 @@ class CardCompareTest {
 	}
 	
 	@Test
-	fun `CardDefend can be cleared`(){
+	fun `CardDefend can be cleared`() {
 		//given
 		val card = Card(Suit.HEARTS, Rank.KING)
 		val cardDefend = CardDefend()
