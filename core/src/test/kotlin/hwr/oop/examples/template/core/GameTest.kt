@@ -11,7 +11,8 @@ class GameTest {
 	fun `Game can exist`() {
 		//given
 		//when
-		val game = Game()
+		val game = Game(listOf(), listOf()
+		)
 		//then
 		assertThat(game).isNotNull()
 	}

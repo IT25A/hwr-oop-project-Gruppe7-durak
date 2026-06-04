@@ -18,15 +18,15 @@ class DealTest {
 	@Test
 	fun `Test player hand`() {
 		val deck = Deck.createRandomDeck().toMutableDeck()
-		val playerHand = PlayerHand(PlayerId("test"))
+		val playerHand = PlayerHand.create(listOf(), PlayerId("test"))
 		
 		println("Deck size before: ${deck.cards.size}")
 		
-		deck.dealTo(playerHand, 6)
+		var playerHandUpdated = deck.dealTo(playerHand, 6)
 		
 		println("Deck size after: ${deck.cards.size}")
-		println("Player hand size: ${playerHand.cards.size}")
+		println("Player hand size: ${playerHandUpdated.cards().size}")
 		
-		assert(playerHand.cards.size == 6)
+		assert(playerHandUpdated.cards().size == 6)
 	}
 }

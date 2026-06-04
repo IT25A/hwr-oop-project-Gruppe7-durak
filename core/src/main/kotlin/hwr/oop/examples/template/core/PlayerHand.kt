@@ -5,7 +5,7 @@ value class PlayerId(private val value: String) {
 
  }
 
-class PlayerHand private constructor(
+data class PlayerHand constructor(
 	private val id: PlayerId,
 	private val cardsInternal: List<Card>
 ) {

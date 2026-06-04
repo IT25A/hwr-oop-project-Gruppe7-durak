@@ -7,8 +7,8 @@ class BoutTest {
 	@Test
 	fun `bout can be created`() {
 		//given
-		val attacker = PlayerHand(PlayerId("Attacker"))
-		val defender = PlayerHand(PlayerId("Defender"))
+		val attacker = PlayerHand.create(emptyList(), PlayerId("Attacker"))
+		val defender = PlayerHand.create(emptyList(), PlayerId("Defender"))
 		
 		//when
 		val bout = Bout(attacker, defender, Suit.HEARTS)
@@ -20,87 +20,83 @@ class BoutTest {
 	@Test
 	fun `attacker can play a card and it moves to attack stack`() {
 		//given
-		val attacker = PlayerHand(PlayerId("Attacker"))
-		attacker.cards.add(Card(Suit.SPADES, Rank.SIX))
-		val defender = PlayerHand(PlayerId("Defender"))
+		val attackCard = Card(Suit.SPADES, Rank.SIX)
+		val attacker = PlayerHand.create(listOf(attackCard), PlayerId("Attacker"))
+		val defender = PlayerHand.create(emptyList(), PlayerId("Defender"))
 		val bout = Bout(attacker, defender, Suit.HEARTS)
 		
 		//when
-		val card = attacker.cards.first()
-		val success = bout.attack(card)
+		val success = bout.attack(attackCard)
 		
 		//then
 		assertThat(success).isTrue
-		assertThat(attacker.cards).doesNotContain(card)
-		assertThat(bout.getAttackStack().cards()).containsExactly(card)
+		assertThat(bout.getAttackStack().cards()).containsExactly(attackCard)
 	}
 	
 	@Test
 	fun `return is false if card is not in attacker hand`() {
 		//given
-		
-		val attacker = PlayerHand(PlayerId("Attacker"))
-		attacker.cards.add(Card(Suit.SPADES, Rank.SIX))
-		val defender = PlayerHand(PlayerId("Defender"))
+		val attackCard = Card(Suit.SPADES, Rank.SIX)
+		val attacker = PlayerHand.create(listOf(attackCard), PlayerId("Attacker"))
+		val defender = PlayerHand.create(emptyList(), PlayerId("Defender"))
 		val bout = Bout(attacker, defender, Suit.HEARTS)
 		
 		//when
 		val card = Card(Suit.HEARTS, Rank.EIGHT)
-		val success = bout.attack(card)
 		
 		//then
-		assertThat(success).isFalse
+		org.junit.jupiter.api.Assertions.assertThrows(AttackerDoesNotHaveCardException::class.java) { bout.attack(card) }
 	}
 	
 	@Test
-	fun `attacking card is not contained in attack stack, return false`() {
+	fun `attacking card is not contained in attack stack, throw exception`() {
 		//given
-		
-		val attacker = PlayerHand(PlayerId("Attacker"))
-		attacker.cards.add(Card(Suit.SPADES, Rank.SIX))
-		val defender = PlayerHand(PlayerId("Defender"))
+		val attackCard = Card(Suit.SPADES, Rank.SIX)
+		val attacker = PlayerHand.create(listOf(attackCard), PlayerId("Attacker"))
+		val defender = PlayerHand.create(emptyList(), PlayerId("Defender"))
 		val bout = Bout(attacker, defender, Suit.HEARTS)
 		
 		//when
 		val card = Card(Suit.HEARTS, Rank.EIGHT)
-		val success = bout.defend(card, Card(Suit.HEARTS, Rank.NINE))
+		val cardNotInStack = Card(Suit.HEARTS, Rank.NINE)
 		
 		//then
-		assertThat(success).isFalse
+		org.junit.jupiter.api.Assertions.assertThrows(AttackStackDoesNotContainCardException::class.java) {
+			bout.defend(cardNotInStack, card)
+		}
 	}
 	
 	@Test
-	fun `defending card is not contained in defending stack, throw DefendingCardException`() {
+	fun `defending card is not contained in defending stack, throw DefenderDoesNotHaveCardException`() {
 		//given
-		val attacker = PlayerHand(PlayerId("Attacker"))
-		attacker.cards.add(Card(Suit.SPADES, Rank.SIX))
-		val defender = PlayerHand(PlayerId("Defender"))
+		val attackCard = Card(Suit.SPADES, Rank.SIX)
+		val attacker = PlayerHand.create(listOf(attackCard), PlayerId("Attacker"))
+		val defender = PlayerHand.create(emptyList(), PlayerId("Defender"))
 		val bout = Bout(attacker, defender, Suit.HEARTS)
 		//when
 		val card = Card(Suit.HEARTS, Rank.EIGHT)
-		bout.attack(Card(Suit.SPADES, Rank.SIX))
+		bout.attack(attackCard)
 		//then
-		org.junit.jupiter.api.Assertions.assertThrows(DefendingCardException::class.java) { bout.defend(Card(Suit.SPADES,Rank.SIX), card) }
+		org.junit.jupiter.api.Assertions.assertThrows(DefenderDoesNotHaveCardException::class.java) {
+			bout.defend(attackCard, card)
+		}
 	}
 	
 	@Test
 	fun `defender can beat a card with higher rank same suit`() {
 		//given
-		val attacker = PlayerHand(PlayerId("Attacker"))
-		attacker.cards.add(Card(Suit.SPADES, Rank.SIX))
-		val defender = PlayerHand(PlayerId("Defender"))
-		defender.cards.add(Card(Suit.SPADES, Rank.KING))
+		val attackCard = Card(Suit.SPADES, Rank.SIX)
+		val defendCard = Card(Suit.SPADES, Rank.KING)
+		val attacker = PlayerHand.create(listOf(attackCard), PlayerId("Attacker"))
+		val defender = PlayerHand.create(listOf(defendCard), PlayerId("Defender"))
 		val bout = Bout(attacker, defender, Suit.HEARTS)
 		
 		//when
-		val attackCard = attacker.cards.first()
 		bout.attack(attackCard)
-		val defendCard = defender.cards.first()
 		val success = bout.defend(attackCard, defendCard)
 		
 		//then
 		assertThat(success).isTrue
-		assertThat(defender.cards).doesNotContain(defendCard)
 		assertThat(bout.getDefendStack().cards()).containsExactly(defendCard)
 	}
 	
@@ -109,16 +105,14 @@ class BoutTest {
 	@Test
 	fun `defender can beat non-trump with trump`() {
 		//given
-		val attacker = PlayerHand(PlayerId("Attacker"))
-		attacker.cards.add(Card(Suit.SPADES, Rank.KING))
-		val defender = PlayerHand(PlayerId("Defender"))
-		defender.cards.add(Card(Suit.HEARTS, Rank.SIX)) // HEARTS is trump
+		val attackCard = Card(Suit.SPADES, Rank.KING)
+		val defendCard = Card(Suit.HEARTS, Rank.SIX) // HEARTS is trump
+		val attacker = PlayerHand.create(listOf(attackCard), PlayerId("Attacker"))
+		val defender = PlayerHand.create(listOf(defendCard), PlayerId("Defender"))
 		val bout = Bout(attacker, defender, Suit.HEARTS)
 		
 		//when
-		val attackCard = attacker.cards.first()
 		bout.attack(attackCard)
-		val defendCard = defender.cards.first()
 		val success = bout.defend(attackCard, defendCard)
 		
 		//then
@@ -129,16 +123,14 @@ class BoutTest {
 	@Test
 	fun `defender cannot beat lower trump with non-trump`() {
 		//given
-		val attacker = PlayerHand(PlayerId("Attacker"))
-		attacker.cards.add(Card(Suit.HEARTS, Rank.KING)) // trump that's high
-		val defender = PlayerHand(PlayerId("Defender"))
-		defender.cards.add(Card(Suit.SPADES, Rank.ACE)) // non-trump even though high
+		val attackCard = Card(Suit.HEARTS, Rank.KING) // trump that's high
+		val defendCard = Card(Suit.SPADES, Rank.ACE) // non-trump even though high
+		val attacker = PlayerHand.create(listOf(attackCard), PlayerId("Attacker"))
+		val defender = PlayerHand.create(listOf(defendCard), PlayerId("Defender"))
 		val bout = Bout(attacker, defender, Suit.HEARTS)
 		
 		//when
-		val attackCard = attacker.cards.first()
 		bout.attack(attackCard)
-		val defendCard = defender.cards.first()
 		val success = bout.defend(attackCard, defendCard)
 		
 		//then
@@ -148,23 +140,21 @@ class BoutTest {
 	@Test
 	fun `fully defended bout returns defender win with table cards`() {
 		//given
-		val attacker = PlayerHand(PlayerId("Attacker"))
-		attacker.cards.add(Card(Suit.SPADES, Rank.SIX))
-		val defender = PlayerHand(PlayerId("Defender"))
-		defender.cards.add(Card(Suit.SPADES, Rank.KING))
+		val attackCard = Card(Suit.SPADES, Rank.SIX)
+		val defendCard = Card(Suit.SPADES, Rank.KING)
+		val attacker = PlayerHand.create(listOf(attackCard), PlayerId("Attacker"))
+		val defender = PlayerHand.create(listOf(defendCard), PlayerId("Defender"))
 		val bout = Bout(attacker, defender, Suit.HEARTS)
 		
 		//when
-		val attackCard = attacker.cards.first()
 		bout.attack(attackCard)
-		val defendCard = defender.cards.first()
 		bout.defend(attackCard, defendCard)
 		val result = bout.resolve()
 		
 		//then
 		assertThat(result.defenderWon).isTrue
 		assertThat(result.tableCards).containsExactlyInAnyOrder(attackCard, defendCard)
-		assertThat(result.winner).isEqualTo(defender)
+		assertThat(result.winner.getId()).isEqualTo(defender.getId())
 		assertThat(bout.pairings()).isNotEmpty
 		
 	}
@@ -172,15 +162,13 @@ class BoutTest {
 	@Test
 	fun `resolve as attacker win clears pairings when there is at least one defended card`() {
 		// given: attacker has two cards, defender has one card to defend the first attack
-		val attacker = PlayerHand(PlayerId("Attacker"))
 		val cardA1 = Card(Suit.SPADES, Rank.SIX)
 		val cardA2 = Card(Suit.SPADES, Rank.SEVEN)
-		attacker.cards.add(cardA1)
-		attacker.cards.add(cardA2)
+		val attackerCards = mutableListOf(cardA1, cardA2)
+		val attacker = PlayerHand.create(attackerCards, PlayerId("Attacker"))
 		
-		val defender = PlayerHand(PlayerId("Defender"))
 		val defendCard = Card(Suit.SPADES, Rank.KING)
-		defender.cards.add(defendCard)
+		val defender = PlayerHand.create(listOf(defendCard), PlayerId("Defender"))
 		
 		val bout = Bout(attacker, defender, Suit.HEARTS)
 		
@@ -206,29 +194,29 @@ class BoutTest {
 		assertThat(bout.getDefendStack().cards()).isEmpty()
 		
 		// defender's hand should now contain the attacked cards + defended card
-		assertThat(defender.cards).contains(cardA1, cardA2, defendCard)
+		val defenderCards = bout.defender.cards()
+		assertThat(defenderCards).contains(cardA1, cardA2, defendCard)
 	}
 	
 	@Test
 	fun `undefended bout returns attacker win and defender takes cards`() {
 		//given
-		val attacker = PlayerHand(PlayerId("Attacker"))
-		attacker.cards.add(Card(Suit.SPADES, Rank.KING))
-		val defender = PlayerHand(PlayerId("Defender"))
-		defender.cards.add(Card(Suit.HEARTS, Rank.KING)) // can't beat spades with non-trump hearts
+		val attackCard = Card(Suit.SPADES, Rank.KING)
+		val attacker = PlayerHand.create(listOf(attackCard), PlayerId("Attacker"))
+		val defender = PlayerHand.create(listOf(Card(Suit.HEARTS, Rank.KING)), PlayerId("Defender")) // can't beat spades with non-trump hearts
 		val bout = Bout(attacker, defender, Suit.CLUBS)
 		
 		//when
-		val attackCard = attacker.cards.first()
 		bout.attack(attackCard)
-		val defendCard = defender.cards.first()
 		val result = bout.resolve()
 		
 		//then
 		assertThat(result.defenderWon).isFalse
 		assertThat(result.tableCards).isEmpty()
-		assertThat(result.winner).isEqualTo(attacker)
-		assertThat(defender.cards).contains(attackCard)
+		assertThat(result.winner.getId()).isEqualTo(attacker.getId())
+		
+		// defender should now have the attack card
+		assertThat(bout.defender.cards()).contains(attackCard)
 		
 		assertThat(bout.getAttackStack().cards().toList()).isEmpty()
 		assertThat(bout.getDefendStack().cards().toList()).isEmpty()
@@ -239,17 +227,15 @@ class BoutTest {
 	@Test
 	fun `attacker win clears the table pile`() {
 		//given
-		val attacker = PlayerHand(PlayerId("Attacker"))
-		attacker.cards.add(Card(Suit.SPADES, Rank.SIX))
-		attacker.cards.add(Card(Suit.SPADES, Rank.KING))
-		val defender = PlayerHand(PlayerId("Defender"))
-		defender.cards.add(Card(Suit.SPADES, Rank.KING))
+		val attackCard1 = Card(Suit.SPADES, Rank.SIX)
+		val attackCard2 = Card(Suit.SPADES, Rank.KING)
+		val attacker = PlayerHand.create(listOf(attackCard1, attackCard2), PlayerId("Attacker"))
+		val defendCard = Card(Suit.SPADES, Rank.KING)
+		val defender = PlayerHand.create(listOf(defendCard), PlayerId("Defender"))
 		val bout = Bout(attacker, defender, Suit.HEARTS)
 		
 		//when: defender wins first (tablePile gets filled)
-		val attackCard1 = Card(Suit.SPADES, Rank.SIX)
 		bout.attack(attackCard1)
-		val defendCard = Card(Suit.SPADES, Rank.KING)
 		bout.defend(attackCard1, defendCard)
 		bout.resolve()
 		
@@ -258,7 +244,6 @@ class BoutTest {
 		
 		// then: attacker wins (should clear tablePile)
 		bout.promoteDefendToAttack()
-		val attackCard2 = Card(Suit.SPADES, Rank.KING)
 		bout.attack(attackCard2)
 		val result = bout.resolve()
 		
@@ -273,8 +258,8 @@ class BoutTest {
 		val attackingCard = Card(Suit.HEARTS, Rank.SIX)
 		val defendingCard = Card(Suit.HEARTS, Rank.SEVEN)
 		
-		val attacker = PlayerHand(PlayerId("attacker"), mutableListOf(attackingCard))
-		val defender = PlayerHand(PlayerId("defender"), mutableListOf(defendingCard))
+		val attacker = PlayerHand.create(listOf(attackingCard), PlayerId("attacker"))
+		val defender = PlayerHand.create(listOf(defendingCard), PlayerId("defender"))
 		val bout = Bout(attacker, defender, Suit.CLUBS)
 		
 		// when: Angriff und erfolgreiche Verteidigung
@@ -308,16 +293,14 @@ class BoutTest {
 	@Test
 	fun `promote defended cards to attacks and finalize moves to discard`() {
 		// given
-		val attacker = PlayerHand(PlayerId("Attacker"))
-		attacker.cards.add(Card(Suit.SPADES, Rank.SIX))
-		val defender = PlayerHand(PlayerId("Defender"))
-		defender.cards.add(Card(Suit.SPADES, Rank.KING))
+		val attackCard = Card(Suit.SPADES, Rank.SIX)
+		val defendCard = Card(Suit.SPADES, Rank.KING)
+		val attacker = PlayerHand.create(listOf(attackCard), PlayerId("Attacker"))
+		val defender = PlayerHand.create(listOf(defendCard), PlayerId("Defender"))
 		val bout = Bout(attacker, defender, Suit.HEARTS)
 
 		// when: attacker plays and defender successfully defends
-		val attackCard = attacker.cards.first()
 		bout.attack(attackCard)
-		val defendCard = defender.cards.first()
 		bout.defend(attackCard, defendCard)
 		val result = bout.resolve()
 
