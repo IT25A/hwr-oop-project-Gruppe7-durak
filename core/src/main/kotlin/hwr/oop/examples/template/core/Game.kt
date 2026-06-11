@@ -20,7 +20,8 @@ class Game(
 	private var currentDefenderIndex: Int = 1,
 	private var roundActive: Boolean = false,
 	private var roundCardPairings: MutableMap<Card, Card?> = mutableMapOf(), // attack -> defend (or null if undefended)
-	private var currentRoundAttackers: MutableList<PlayerId> = mutableListOf()
+	private var currentRoundAttackers: MutableList<PlayerId> = mutableListOf(),
+	private var currentBout: Bout? = null
 ) {
 	companion object {
 		fun create(playerIds: List<PlayerId>): Game {
@@ -73,6 +74,12 @@ class Game(
 		roundCardPairings.clear()
 		currentRoundAttackers.clear()
 		currentRoundAttackers.add(getAttacker())
+		
+		// Create a Bout for this round
+		val attackerHand = handsOfPlayers[getAttacker()] ?: PlayerHand.create(id = getAttacker())
+		val defenderHand = handsOfPlayers[getDefender()] ?: PlayerHand.create(id = getDefender())
+		currentBout = Bout(attackerHand, defenderHand, trump)
+		
 		roundActive = true
 	}
 	
@@ -86,26 +93,32 @@ class Game(
 		
 		val attacker = getAttacker()
 		val attackerHand = handsOfPlayers[attacker] ?: throw IllegalStateException("Attacker not found")
+		val bout = currentBout ?: throw IllegalStateException("No active bout")
 		
 		if (!attackerHand.contains(card)) {
 			throw IllegalStateException("Attacker does not have the card: $card")
 		}
 		
-		// Can only attack with cards that match rank of already-played cards or new ranks
-		if (roundCardPairings.isNotEmpty()) {
-			val ranksOnTable = roundCardPairings.keys.map { it.rank() }.toSet()
-			if (card.rank() !in ranksOnTable && roundCardPairings.size >= handsOfPlayers[getDefender()]?.cards()?.size ?: 0) {
-				return false
-		}
+		// Check ranks on table (including defended cards)
+		val ranksOnTable = bout.ranksOnTable()
+		val isFirstAttack = bout.attackStackCards().isEmpty()
+		
+		if (!isFirstAttack && card.rank() !in ranksOnTable && bout.attackStackCards().size >= handsOfPlayers[getDefender()]?.cards()?.size ?: 0) {
+			return false
 		}
 		
-		// Add the attacking card with no defense initially
-		roundCardPairings[card] = null
-		handsOfPlayers = handsOfPlayers.toMutableMap().apply {
-			this[attacker] = attackerHand.without(card)
+		// Delegate to bout
+		val ok = bout.attack(card)
+		if (ok) {
+			// Synchronize attacker hand from bout
+			handsOfPlayers = handsOfPlayers.toMutableMap().apply {
+				this[attacker] = bout.attacker
+			}
+			// Update game pairings view
+			roundCardPairings[card] = null
 		}
 		
-		return true
+		return ok
 	}
 	
 	/**
@@ -130,24 +143,29 @@ class Game(
 			return false // Player doesn't have the card
 		}
 		
-		// Check if card rank matches ranks on table
-		val ranksOnTable = roundCardPairings.keys.map { it.rank() }.toSet()
+		val bout = currentBout ?: throw IllegalStateException("No active bout")
+		
+		// Check if card rank matches ranks on table (including defended cards)
+		val ranksOnTable = bout.ranksOnTable()
 		if (card.rank() !in ranksOnTable) {
 			return false
 		}
 		
 		// Cannot exceed defender's maximum playable cards
 		val defenderCardCount = handsOfPlayers[getDefender()]?.cards()?.size ?: 0
-		if (roundCardPairings.size >= defenderCardCount) {
+		if (bout.attackStackCards().size >= defenderCardCount) {
 			return false
 		}
 		
-		// Add the attacking card
-		roundCardPairings[card] = null
+		// Add the attacking card via bout
+		bout.addAttackFromOther(card)
 		currentRoundAttackers.add(playerId)
 		handsOfPlayers = handsOfPlayers.toMutableMap().apply {
 			this[playerId] = joiningHand.without(card)
 		}
+		
+		// Update game pairings view
+		roundCardPairings[card] = null
 		
 		return true
 	}
@@ -160,7 +178,9 @@ class Game(
 			throw IllegalStateException("No active round")
 		}
 		
-		if (!roundCardPairings.containsKey(attackingCard)) {
+		val bout = currentBout ?: throw IllegalStateException("No active bout")
+		
+		if (!bout.attackStackCards().contains(attackingCard)) {
 			throw IllegalStateException("Attacking card not in round")
 		}
 		
@@ -171,55 +191,34 @@ class Game(
 			throw IllegalStateException("Defender does not have the card")
 		}
 		
-		// Check if defending card beats attacking card
-		val defendingWins = cardBeats(attackingCard, defendingCard)
-		if (!defendingWins) {
-			return false
+		// Delegate to bout
+		val ok = bout.defend(attackingCard, defendingCard)
+		if (ok) {
+			// Synchronize defender hand from bout
+			handsOfPlayers = handsOfPlayers.toMutableMap().apply {
+				this[defender] = bout.defender
+			}
+			// Update game pairings view
+			roundCardPairings[attackingCard] = defendingCard
 		}
 		
-		// Record the pairing
-		roundCardPairings[attackingCard] = defendingCard
-		handsOfPlayers = handsOfPlayers.toMutableMap().apply {
-			this[defender] = defenderHand.without(defendingCard)
-		}
-		
-		return true
-	}
-	
-	/**
-	 * Check if defending card beats attacking card
-	 */
-	private fun cardBeats(attacking: Card, defending: Card): Boolean {
-		val attackRank = attacking.rank()
-		val defendRank = defending.rank()
-		val attackValue = attacking.getCardValue(attackRank)
-		val defendValue = defending.getCardValue(defendRank)
-		
-		// Same suit -> higher rank wins
-		if (attacking.suit() == defending.suit()) {
-			return defendValue > attackValue
-		}
-		
-		// Trump beats non-trump
-		if (defending.suit() == trump && attacking.suit() != trump) {
-			return true
-		}
-		
-		return false
+		return ok
 	}
 	
 	/**
 	 * Check if the defender has beaten all attacking cards
 	 */
 	fun isRoundFullyDefended(): Boolean {
-		return roundCardPairings.values.none { it == null }
+		val bout = currentBout ?: return true
+		return bout.isFullyDefended()
 	}
 	
 	/**
 	 * Check if there are undefended cards
 	 */
 	fun hasUndefendedCards(): Boolean {
-		return roundCardPairings.values.any { it == null }
+		val bout = currentBout ?: return false
+		return bout.attackStackCards().any { bout.pairings()[it] == null }
 	}
 	
 	/**
@@ -230,19 +229,19 @@ class Game(
 			throw IllegalStateException("No active round")
 		}
 		
+		val bout = currentBout ?: throw IllegalStateException("No active bout")
 		val defender = getDefender()
-		val defenderWon = isRoundFullyDefended()
+		val result = bout.resolve()
 		
-		if (defenderWon) {
+		// Synchronize attacker and defender hands from bout
+		handsOfPlayers = handsOfPlayers.toMutableMap().apply {
+			this[getAttacker()] = bout.attacker
+			this[defender] = bout.defender
+		}
+		
+		if (result.defenderWon) {
 			// Defender won: put all cards in discard, defender becomes next attacker
-			val allCards = mutableListOf<Card>()
-			roundCardPairings.forEach { (attack, defend) ->
-				allCards.add(attack)
-				if (defend != null) {
-					allCards.add(defend)
-				}
-			}
-			discard.addAll(allCards)
+			bout.finalizeRound(discard)
 			
 			// Rotate: defender -> attacker, current attacker -> defender
 			val nextAttackerIndex = currentDefenderIndex
@@ -251,19 +250,7 @@ class Game(
 			currentAttackerIndex = nextAttackerIndex
 			currentDefenderIndex = nextDefenderIndex
 		} else {
-			// Defender lost: defender takes all cards, attacker stays
-			val allCards = mutableListOf<Card>()
-			roundCardPairings.forEach { (attack, defend) ->
-				allCards.add(attack)
-				if (defend != null) {
-					allCards.add(defend)
-				}
-			}
-			
-			handsOfPlayers = handsOfPlayers.toMutableMap().apply {
-				this[defender] = (this[defender] ?: PlayerHand.create(id = defender)).withAdded(allCards)
-			}
-			
+			// Defender lost: defender takes all cards (already applied in bout.resolve)
 			// Next defender
 			currentDefenderIndex = (currentDefenderIndex + 1) % players.size
 		}
@@ -272,6 +259,7 @@ class Game(
 		roundCardPairings.clear()
 		currentRoundAttackers.clear()
 		currentRoundAttackers.add(players[currentAttackerIndex])
+		currentBout = null
 		
 		// Deal new cards
 		replenishHands()

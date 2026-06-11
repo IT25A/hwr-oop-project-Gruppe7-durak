@@ -266,26 +266,28 @@ class BoutTest {
 		// when: Angriff und erfolgreiche Verteidigung
 		assertThat(bout.attack(attackingCard)).isTrue()
 		assertThat(bout.defend(attackingCard, defendingCard)).isTrue()
+		assertThat(bout.defendStackCards()).containsExactly(defendingCard)
 		
 		// resolve -> tableCards should be non-empty (sichert Tisch-Karten)
 		val result = bout.resolve()
 		assertThat(result.tableCards).isNotEmpty
 		
-		// finalizeRound: toDiscard = tablePile(2) + attackStack(1) + defendStack(1) => 4 Karten
+		// finalizeRound: toDiscard = tablePile(2) Karten (Attack + Defend sind darin gespeichert)
+		// attackStack und defendStack werden gefiltert um Duplikate zu vermeiden
 		val discard = DiscardPile()
 		bout.finalizeRound(discard)
 		
-		// nach erstem finalize: discard enthält die erwarteten Karten
+		// nach erstem finalize: discard enthält die erwarteten Karten (ohne Duplikate)
 		assertThat(discard.cards()).isNotEmpty
-		assertThat(discard.cards().size).isEqualTo(4)
+		assertThat(discard.cards().size).isEqualTo(2)
 		
 		// Stacks wurden zurückgesetzt (über reset())
 		assertThat(bout.getAttackStack().cards()).isEmpty()
 		assertThat(bout.getDefendStack().cards()).isEmpty()
 		
-		// zweiter Aufruf: im Original unverändert (bleibt 4); wenn tablePile.clear() entfernt wurde -> würde es 6
+		// zweiter Aufruf: bleibt bei 2 (tablePile ist leer nach erstem finalize)
 		bout.finalizeRound(discard)
-		assertThat(discard.cards().size).isEqualTo(4)
+		assertThat(discard.cards().size).isEqualTo(2)
 	}
 	
 	@Test

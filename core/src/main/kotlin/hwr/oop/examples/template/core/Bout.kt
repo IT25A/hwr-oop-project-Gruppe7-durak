@@ -9,20 +9,30 @@ class Bout(
 	private val defendStack = CardDefend()
 	
 	// Map um zu tracken welche Angriffskarte von welcher Verteidigungskarte geschlagen wird
-	private val pairings: MutableMap<Card, Card> = mutableMapOf()
+	// null bedeutet die Angriffskarte wurde noch nicht verteidigt
+	private val pairings: MutableMap<Card, Card?> = mutableMapOf()
 	private val tablePile: MutableList<Card> = mutableListOf() // gesicherte Tisch-Karte
 	
 	fun getAttackStack(): AttackStack = attackStack
 	fun getDefendStack(): CardDefend = defendStack
-	fun pairings(): Map<Card, Card> = pairings
+	fun pairings(): Map<Card, Card?> = pairings
 	fun tablePile(): List<Card> = tablePile
+	fun attackStackCards(): List<Card> = attackStack.cards().toList()
+	fun defendStackCards(): List<Card> = defendStack.cards().toList()
 	
 	// Angreifer spielt eine Karte
 	fun attack(card: Card): Boolean {
 		if (!attacker.contains(card)) throw AttackerDoesNotHaveCardException("Attacker does not have the card: $card")
 		attacker = attacker.without(card)
 		attackStack.add(card)
+		pairings[card] = null
 		return true
+	}
+
+	// Andere Spieler legen eine Karte ohne Handprüfung - Game verantwortlich für Hand-Update
+	fun addAttackFromOther(card: Card) {
+		attackStack.add(card)
+		pairings[card] = null
 	}
 	
 	fun defend(attackingCard: Card, defendingCard: Card): Boolean {
@@ -30,7 +40,7 @@ class Bout(
 				.contains(attackingCard)
 		) throw AttackStackDoesNotContainCardException("Attack stack does not contain the attacking card: $attackingCard")
 		if (!defender.contains(defendingCard)) throw DefenderDoesNotHaveCardException("Defender does not have the card: $defendingCard")
-		if (pairings.containsKey(attackingCard)) throw PairingCardWasAlreadyBeenDefendedException("The attacking card has already been defended: $attackingCard")
+		if (pairings[attackingCard] != null) throw PairingCardWasAlreadyBeenDefendedException("The attacking card has already been defended: $attackingCard")
 		
 		val defendingWins = cardBeats(attackingCard, defendingCard)
 		if (defendingWins) {
@@ -42,8 +52,16 @@ class Bout(
 		return false
 	}
 	
+	// Ränge aller Karten auf dem Tisch (Angriffs- und Abwehrkarten)
+	fun ranksOnTable(): Set<Rank> {
+		val ranks = mutableSetOf<Rank>()
+		ranks.addAll(pairings.keys.map { it.rank() })
+		ranks.addAll(pairings.values.filterNotNull().map { it.rank() })
+		return ranks
+	}
+	
 	// Prüft ob defendingCard die attackingCard schlägt
-	private fun cardBeats(attacking: Card, defending: Card): Boolean {
+	fun cardBeats(attacking: Card, defending: Card): Boolean {
 		val attackRank = attacking.rank()
 		val defendRank = defending.rank()
 		val attackValue = attacking.getCardValue(attackRank)
@@ -65,7 +83,7 @@ class Bout(
 	
 	// Prüft ob alle Angriffskarten verteidigt wurden
 	fun isFullyDefended(): Boolean {
-		return attackStack.cards().all { pairings.containsKey(it) }
+		return attackStack.cards().all { pairings[it] != null }
 	}
 	
 	// Auflösen der Runde
@@ -79,7 +97,7 @@ class Bout(
 			// Stacks nicht leeren — Caller macht das nach promote/finalize
 			return BoutResult(defenderWon = true, tableCards = tableCards, winner = defender)
 		} else {
-			// Angreifer hat gewonnen: Verteidiger nimmt ALLE Tisch-Karten
+			// Angreifer hat gewonnen: Verteidiger nimmt ALLE Tisch-Karten (inkl. defend und undefended)
 			val allToTake = mutableListOf<Card>()
 			allToTake.addAll(tablePile)
 			allToTake.addAll(attackStack.cards())
@@ -114,16 +132,22 @@ class Bout(
 		val promoted = defendStack.cards()
 		promoted.forEach { attackStack.add(it) }
 		
-		// 5) verteidigungs-stack kann nun geleert werden (sie sind jetzt aktive Angriffe)
+		// 5) promotete Karten müssen in pairings mit null initialiert werden
+		promoted.forEach { pairings[it] = null }
+		
+		// 6) verteidigungs-stack kann nun geleert werden (sie sind jetzt aktive Angriffe)
 		defendStack.clear()
 	}
 	
 	// Finalisiere die Runde: verschiebe alle Tischkarten in den Ablagestapel und leere Stacks
 	fun finalizeRound(discard: DiscardPile) {
 		val toDiscard = mutableListOf<Card>()
+		// tablePile enthält bereits alle Karten (attack + defend), wenn resolve() mit defenderWon=true aufgerufen wurde
 		toDiscard.addAll(tablePile)
-		toDiscard.addAll(attackStack.cards())
-		toDiscard.addAll(defendStack.cards())
+		// attackStack und defendStack sollten bei defenderWon bereits leer sein oder nur für promotion relevant
+		// aber sichergestellen wir trotzdem, dass wir keine Duplikate hinzufügen
+		toDiscard.addAll(attackStack.cards().filter { card -> !toDiscard.contains(card) })
+		toDiscard.addAll(defendStack.cards().filter { card -> !toDiscard.contains(card) })
 		if (toDiscard.isNotEmpty()) discard.addAll(toDiscard)
 		// alles leeren
 		tablePile.clear()
