@@ -356,5 +356,25 @@ class BoutTest {
 		//then
 		assertThat(success).isFalse
 	}
+
+	@Test
+	fun `defending an already defended attacking card throws PairingCardWasAlreadyBeenDefendedException`() {
+		// given
+		val attackCard = Card(Suit.SPADES, Rank.SIX)
+		val defendCard1 = Card(Suit.SPADES, Rank.KING)
+		val defendCard2 = Card(Suit.SPADES, Rank.QUEEN)
+		val attacker = PlayerHand.create(listOf(attackCard), PlayerId("Attacker"))
+		val defender = PlayerHand.create(listOf(defendCard1, defendCard2), PlayerId("Defender"))
+		val bout = Bout(attacker, defender, Suit.HEARTS)
+
+		// when: attacker plays and defender defends once
+		bout.attack(attackCard)
+		assertThat(bout.defend(attackCard, defendCard1)).isTrue()
+
+		// then: attempting to defend the same attacking card again should throw
+		org.junit.jupiter.api.Assertions.assertThrows(PairingCardWasAlreadyBeenDefendedException::class.java) {
+			bout.defend(attackCard, defendCard2)
+		}
+	}
 	
 }
