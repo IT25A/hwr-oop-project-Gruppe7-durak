@@ -190,19 +190,6 @@ class GameFullCoverageTest {
 		assertThat(game.getRoundCardPairings()).containsKey(card)
 	}
 	
-	@Test
-	fun `cannot attack with card not in hand`() {
-		// given
-		val game = Game.create(listOf(PlayerId("P1"), PlayerId("P2")))
-		game.startRound()
-		
-		val fakeCard = Card(Suit.CLUBS, Rank.SIX)
-		
-		// when & then
-		assertThrows<IllegalStateException> {
-			game.attackWithCard(fakeCard)
-		}
-	}
 	
 	@Test
 	fun `fully defended round identifies winner`() {

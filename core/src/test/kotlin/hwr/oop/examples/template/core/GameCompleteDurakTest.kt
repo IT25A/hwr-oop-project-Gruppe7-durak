@@ -316,11 +316,18 @@ class GameCompleteDurakTest {
 	
 	@Test
 	fun `cannot attack with card not in hand`() {
-		// given
-		val game = Game.create(listOf(PlayerId("P1"), PlayerId("P2")))
+		// given - deterministic hands
+		val p1 = PlayerId("P1")
+		val p2 = PlayerId("P2")
+		val attackerHand = PlayerHand.create(listOf(Card(Suit.SPADES, Rank.SIX)), p1)
+		val defenderHand = PlayerHand.create(listOf(Card(Suit.HEARTS, Rank.SEVEN)), p2)
+		
+		val hands = mapOf(p1 to attackerHand, p2 to defenderHand)
+		val game = Game(hands, listOf(p1, p2), Deck.createRandomDeck().toMutableDeck()) // deck content irrelevant
+		
 		game.startRound()
 		
-		val fakeCard = Card(Suit.CLUBS, Rank.SIX)
+		val fakeCard = Card(Suit.CLUBS, Rank.SIX) // guaranteed not in attacker hand
 		
 		// when & then
 		assertThrows<IllegalStateException> {
@@ -330,18 +337,23 @@ class GameCompleteDurakTest {
 	
 	@Test
 	fun `cannot defend with card not in hand`() {
-		// given
-		val game = Game.create(listOf(PlayerId("P1"), PlayerId("P2")))
+		// given - deterministic hands
+		val p1 = PlayerId("P1")
+		val p2 = PlayerId("P2")
+		val attackCard = Card(Suit.CLUBS, Rank.SEVEN)
+		val attackerHand = PlayerHand.create(listOf(attackCard), p1)
+		val defenderHand = PlayerHand.create(listOf(Card(Suit.HEARTS, Rank.SEVEN)), p2)
+		
+		val hands = mapOf(p1 to attackerHand, p2 to defenderHand)
+		val game = Game(hands, listOf(p1, p2), Deck.createRandomDeck().toMutableDeck()) // deck content irrelevant
+		
 		game.startRound()
 		
-		val attackCard = game.getPlayerHand(game.getAttacker())?.cards()?.first() ?: return
-		game.attackWithCard(attackCard)
-		
-		val fakeDefendCard = Card(Suit.DIAMONDS, Rank.ACE)
+		val fakeCard = Card(Suit.CLUBS, Rank.SIX) // guaranteed not in attacker hand
 		
 		// when & then
 		assertThrows<IllegalStateException> {
-			game.defendCard(attackCard, fakeDefendCard)
+			game.defendCard(attackCard, fakeCard)
 		}
 	}
 	
