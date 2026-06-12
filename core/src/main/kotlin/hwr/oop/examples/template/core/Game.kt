@@ -154,7 +154,7 @@ class Game(
 		// Cannot exceed defender's maximum playable cards
 		val defenderCardCount = handsOfPlayers[getDefender()]?.cards()?.size ?: 0
 		if (bout.attackStackCards().size > defenderCardCount) {
-			throw IllegalStateException("No active round")
+			throw IllegalStateException("Defender does not have enough cards")
 		}
 		
 		// Add the attacking card via bout

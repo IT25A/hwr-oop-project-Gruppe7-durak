@@ -1,6 +1,7 @@
 package hwr.oop.examples.template.core
 
 import org.assertj.core.api.Assertions.assertThat
+import org.junit.jupiter.api.Assertions.assertThrows
 import org.junit.jupiter.api.Test
 
 class BoutTest {
@@ -388,7 +389,7 @@ class BoutTest {
 		assertThat(bout.defend(attackCard, defendCard1)).isTrue()
 		
 		// then: attempting to defend the same attacking card again should throw
-		org.junit.jupiter.api.Assertions.assertThrows(PairingCardWasAlreadyBeenDefendedException::class.java) {
+		assertThrows(PairingCardWasAlreadyBeenDefendedException::class.java) {
 			bout.defend(attackCard, defendCard2)
 		}
 	}

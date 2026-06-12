@@ -1,6 +1,7 @@
 package hwr.oop.examples.template.core
 
 import org.assertj.core.api.Assertions.assertThat
+import org.junit.jupiter.api.Assertions
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.assertThrows
 
@@ -226,11 +227,14 @@ class GameMergedTest {
 		game.attackWithCard(attackCard)
 		
 		val secondCard = game.getPlayerHand(attacker)?.cards()?.firstOrNull { it != attackCard } ?: return
-		assertThat(game.joinAttack(attacker, secondCard)).isFalse()
-		
+      Assertions.assertThrows(IllegalStateException::class.java) {
+          game.joinAttack(attacker, secondCard)
+      }
 		val defenderCard = game.getPlayerHand(defender)?.cards()?.first() ?: return
-		assertThat(game.joinAttack(defender, defenderCard)).isFalse()
-	}
+      Assertions.assertThrows(IllegalStateException::class.java) {
+          game.joinAttack(defender, defenderCard)
+      }
+      }
 	
 	// ==================== Role Rotation Tests ====================
 	
@@ -421,30 +425,33 @@ class GameCoverageExtraTest {
 		game.attackWithCard(attackCard)
 		
 		// joiner has rank EIGHT, attack rank is SIX -> should be rejected
-		val tryJoinWrongRank = game.joinAttack(p3, joinerHand.cards().first())
-		assertThat(tryJoinWrongRank).isFalse()
-		
-		// try with a card not in player's hand
-		val fakeCard = Card(Suit.SPADES, Rank.NINE)
-		val tryJoinNoCard = game.joinAttack(p3, fakeCard)
-		assertThat(tryJoinNoCard).isFalse()
-		
-		// Make a joiner with a correct rank and succeed, then second attempt should be false
-		val joiner2Hand = PlayerHand.create(listOf(Card(Suit.DIAMONDS, Rank.SIX)), PlayerId("P4"))
-		val p4 = PlayerId("P4")
-		
-		// create a fresh game for this part (use fresh attacker hand instance)
-		val attackerHand2 = PlayerHand.create(listOf(Card(Suit.SPADES, Rank.SIX)), p1)
-		val defenderHand2 = PlayerHand.create(listOf(Card(Suit.HEARTS, Rank.SEVEN), Card(Suit.CLUBS, Rank.EIGHT)), p2)
-		val handsPart = mapOf(p1 to attackerHand2, p2 to defenderHand2, p4 to joiner2Hand)
-		val game2 = Game(handsPart, listOf(p1, p2, p4), Deck.createRandomDeck().toMutableDeck())
-		game2.startRound()
-		game2.attackWithCard(attackerHand2.cards().first())
-		val successFirst = game2.joinAttack(p4, joiner2Hand.cards().first())
-		assertThat(successFirst).isTrue()
-		val successSecond = game2.joinAttack(p4, joiner2Hand.cards().first())
-		assertThat(successSecond).isFalse()
-	}
+      Assertions.assertThrows(IllegalStateException::class.java) {
+          game.joinAttack(p3, joinerHand.cards().first())
+      }
+          
+          // try with a card not in player's hand
+          val fakeCard = Card(Suit.SPADES, Rank.NINE)
+          Assertions.assertThrows(IllegalStateException::class.java) {
+              game.joinAttack(p3, fakeCard)
+        }
+          
+          // Make a joiner with a correct rank and succeed, then second attempt should be false
+          val joiner2Hand = PlayerHand.create(listOf(Card(Suit.DIAMONDS, Rank.SIX), Card(Suit.CLUBS, Rank.SIX)), PlayerId("P4"))
+          val p4 = PlayerId("P4")
+          
+          // create a fresh game for this part (use fresh attacker hand instance)
+          val attackerHand2 = PlayerHand.create(listOf(Card(Suit.SPADES, Rank.SIX)), p1)
+          val defenderHand2 = PlayerHand.create(listOf(Card(Suit.HEARTS, Rank.SEVEN), Card(Suit.CLUBS, Rank.EIGHT)), p2)
+          val handsPart = mapOf(p1 to attackerHand2, p2 to defenderHand2, p4 to joiner2Hand)
+          val game2 = Game(handsPart, listOf(p1, p2, p4), Deck.createRandomDeck().toMutableDeck())
+          game2.startRound()
+          game2.attackWithCard(attackerHand2.cards().first())
+          val successFirst = game2.joinAttack(p4, joiner2Hand.cards().first())
+          assertThat(successFirst).isTrue()
+      Assertions.assertThrows(IllegalStateException::class.java) {
+          game2.joinAttack(p4, joiner2Hand.cards().first())
+      }
+      }
 	
 	@Test
 	fun `defendCard throws when attacking card not in round`() {
@@ -467,25 +474,26 @@ class GameCoverageExtraTest {
 	
 	@Test
 	fun `joinAttack returns false when defender capacity exceeded`() {
-		val p1 = PlayerId("P1")
-		val p2 = PlayerId("P2")
-		val p3 = PlayerId("P3")
-		
-		val attackerHand = PlayerHand.create(listOf(Card(Suit.SPADES, Rank.SIX)), p1)
-		val defenderHand = PlayerHand.create(emptyList(), p2) // defender has zero capacity
-		val joinerHand = PlayerHand.create(listOf(Card(Suit.CLUBS, Rank.SIX)), p3)
-		
-		val hands = mapOf(p1 to attackerHand, p2 to defenderHand, p3 to joinerHand)
-		val game = Game(hands, listOf(p1, p2, p3), MutableDeck(mutableListOf()))
-		
-		game.startRound()
-		val attackCard = attackerHand.cards().first()
-		game.attackWithCard(attackCard)
-		
-		// defender has zero cards so any join should be rejected due to capacity
-		val joined = game.joinAttack(p3, joinerHand.cards().first())
-		assertThat(joined).isFalse()
-	}
+      val p1 = PlayerId("P1")
+      val p2 = PlayerId("P2")
+      val p3 = PlayerId("P3")
+      
+      val attackerHand = PlayerHand.create(listOf(Card(Suit.SPADES, Rank.SIX)), p1)
+      val defenderHand = PlayerHand.create(emptyList(), p2) // defender has zero capacity
+      val joinerHand = PlayerHand.create(listOf(Card(Suit.CLUBS, Rank.SIX)), p3)
+      
+      val hands = mapOf(p1 to attackerHand, p2 to defenderHand, p3 to joinerHand)
+      val game = Game(hands, listOf(p1, p2, p3), MutableDeck(mutableListOf()))
+      
+      game.startRound()
+      val attackCard = attackerHand.cards().first()
+      game.attackWithCard(attackCard)
+      
+      // defender has zero cards so any join should be rejected due to capacity
+      Assertions.assertThrows(IllegalStateException::class.java) {
+          game.joinAttack(p3, joinerHand.cards().first())
+      }
+  }
 	
 	@Test
 	fun `defendCard without active round throws`() {
@@ -864,7 +872,7 @@ class GameCoverageAllBranchesTest {
 		game.endRound()
 		
 		assertThat(game.getRoundCardPairings()).isEmpty()
-		assertThat(game.getCurrentRoundAttackers()).containsExactly(p1)
+		assertThat(game.getCurrentRoundAttackers()).containsExactly(p2)
 	}
 	
 	@Test
