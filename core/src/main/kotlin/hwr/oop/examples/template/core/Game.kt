@@ -130,17 +130,17 @@ class Game(
 		}
 		
 		if (playerId == getAttacker() || playerId == getDefender()) {
-			return false // Attacker and defender cannot join
+			throw IllegalStateException("Attacker and defender cannot join the attack")
 		}
 		
 		if (currentRoundAttackers.contains(playerId)) {
-			return false // Already attacking
+			throw IllegalStateException("error")
 		}
 		
 		val joiningHand = handsOfPlayers[playerId] ?: throw IllegalStateException("Player not found")
 		
 		if (!joiningHand.contains(card)) {
-			return false // Player doesn't have the card
+			throw IllegalStateException("player doesnt have cards")
 		}
 		
 		val bout = currentBout ?: throw IllegalStateException("No active bout")
@@ -148,13 +148,13 @@ class Game(
 		// Check if card rank matches ranks on table (including defended cards)
 		val ranksOnTable = bout.ranksOnTable()
 		if (card.rank() !in ranksOnTable) {
-			return false
+			throw IllegalStateException("Card rank does not match any rank on the table")
 		}
 		
 		// Cannot exceed defender's maximum playable cards
 		val defenderCardCount = handsOfPlayers[getDefender()]?.cards()?.size ?: 0
-		if (bout.attackStackCards().size >= defenderCardCount) {
-			return false
+		if (bout.attackStackCards().size > defenderCardCount) {
+			throw IllegalStateException("No active round")
 		}
 		
 		// Add the attacking card via bout
@@ -253,7 +253,9 @@ class Game(
 			// Defender lost: defender takes all cards (already applied in bout.resolve)
 			// Next defender
 			currentDefenderIndex = (currentDefenderIndex + 1) % players.size
+			currentAttackerIndex = (currentAttackerIndex + 1) % players.size
 		}
+		replenishHands()
 		
 		roundActive = false
 		roundCardPairings.clear()
@@ -262,7 +264,7 @@ class Game(
 		currentBout = null
 		
 		// Deal new cards
-		replenishHands()
+		
 	}
 	
 	/**

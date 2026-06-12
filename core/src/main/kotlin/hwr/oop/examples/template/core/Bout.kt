@@ -137,6 +137,7 @@ class Bout(
 		
 		// 6) verteidigungs-stack kann nun geleert werden (sie sind jetzt aktive Angriffe)
 		defendStack.clear()
+		
 	}
 	
 	// Finalisiere die Runde: verschiebe alle Tischkarten in den Ablagestapel und leere Stacks
