@@ -6,9 +6,9 @@ import org.junit.jupiter.api.Test
 class DiscardTest {
 	
 	@Test
-	fun `check if single cards can be added`(){
+	fun `check if single cards can be added`() {
 		// given
-		val pilecards = Card(Suit.SPADES , Rank.QUEEN)
+		val pilecards = Card(Suit.SPADES, Rank.QUEEN)
 		
 		// when
 		val discardPile = DiscardPile()

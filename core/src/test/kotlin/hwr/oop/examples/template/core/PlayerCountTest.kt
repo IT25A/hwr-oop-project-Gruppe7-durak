@@ -12,16 +12,17 @@ class PlayerCountTest {
 	fun `dealing cards to different numbers of players`(playerCount: Int) {
 		// given
 		val deck = Deck.createRandomDeck().toMutableDeck()
-		val players = (1..playerCount).map { PlayerHand(PlayerId(it.toString())) }
+		val players = (1..playerCount).map { PlayerHand.create(id = PlayerId("Player $it"), cards = listOf()) }
 		
 		// when
 		val initialDeckSize = deck.cards.size
-		players.forEach { deck.dealTo(it, 6) }
+		// deal and collect updated player hands (PlayerHand is immutable)
+		val updatedPlayers = players.map { deck.dealTo(it, 6) }
 		
 		// then
 		// Each player should have 6 cards
-		players.forEach { player ->
-			assertThat(player.cards.size).isEqualTo(6)
+		updatedPlayers.forEach { player ->
+			assertThat(player.cards().size).isEqualTo(6)
 		}
 		
 		// Deck should have decreased by 6 cards per player
