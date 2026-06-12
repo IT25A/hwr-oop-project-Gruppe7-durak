@@ -123,7 +123,7 @@ class GameMergedTest {
 	}
 	
 	@Test
-	fun `joinAttack without active round throws`() {
+	fun `joinAttack without active bout throws`() {
 		val players = listOf(PlayerId("P1"), PlayerId("P2"), PlayerId("P3"))
 		val hands = mapOf(
 			players[0] to PlayerHand.create(listOf(Card(Suit.SPADES, Rank.SIX)), players[0]),
@@ -133,7 +133,7 @@ class GameMergedTest {
 		val game = Game(hands, players, Deck.createRandomDeck().toMutableDeck())
 		
 		val joinCard = hands[players[2]]?.cards()?.first() ?: return
-		assertThrows<IllegalStateException> { game.joinAttack(players[2], joinCard) }
+		assertThrows<NoActiveBoutException> { game.joinAttack(players[2], joinCard) }
 	}
 	
 	// ==================== Attack / Defend Flow ====================
@@ -250,11 +250,11 @@ class GameMergedTest {
 		game.attackWithCard(attackCard)
 		
 		val secondCard = game.getPlayerHand(attacker)?.cards()?.firstOrNull { it != attackCard } ?: return
-		Assertions.assertThrows(IllegalStateException::class.java) {
+		Assertions.assertThrows(AttackerAndDefenderCanNotJoinAttackException::class.java) {
 			game.joinAttack(attacker, secondCard)
 		}
 		val defenderCard = game.getPlayerHand(defender)?.cards()?.first() ?: return
-		Assertions.assertThrows(IllegalStateException::class.java) {
+		Assertions.assertThrows(AttackerAndDefenderCanNotJoinAttackException::class.java) {
 			game.joinAttack(defender, defenderCard)
 		}
 	}
@@ -360,8 +360,9 @@ class GameMergedTest {
 		game.startRound()
 		val fakeCard = Card(Suit.CLUBS, Rank.SIX)
 		
-		assertThrows<IllegalStateException> { game.attackWithCard(fakeCard) }
-		assertThrows<IllegalStateException> { game.defendCard(Card(Suit.CLUBS, Rank.SEVEN), fakeCard) }
+		
+		assertThrows<AttackerDoesNotHaveCardException> { game.attackWithCard(fakeCard) }
+		assertThrows<AttackStackDoesNotContainCardException> { game.defendCard(Card(Suit.CLUBS, Rank.SEVEN), fakeCard) }
 	}
 	
 	// ==================== 4-Player scenarios ====================
@@ -428,8 +429,9 @@ class GameCoverageExtraTest {
 		assertThat(ok1).isTrue()
 		
 		// Now try to attack with a different rank; defender has 0 capacity -> should be false
-		val ok2 = game.attackWithCard(second)
-		assertThat(ok2).isFalse()
+		Assertions.assertThrows(RankNotOnTableException::class.java) {
+			game.attackWithCard(second)
+		}
 	}
 	
 	@Test
@@ -451,13 +453,13 @@ class GameCoverageExtraTest {
 		game.attackWithCard(attackCard)
 		
 		// joiner has rank EIGHT, attack rank is SIX -> should be rejected
-		Assertions.assertThrows(IllegalStateException::class.java) {
+		Assertions.assertThrows(RankNotOnTableException::class.java) {
 			game.joinAttack(p3, joinerHand.cards().first())
 		}
 		
 		// try with a card not in player's hand
 		val fakeCard = Card(Suit.SPADES, Rank.NINE)
-		Assertions.assertThrows(IllegalStateException::class.java) {
+		Assertions.assertThrows(JoinerDoesNotHaveCardException::class.java) {
 			game.joinAttack(p3, fakeCard)
 		}
 		
@@ -475,7 +477,7 @@ class GameCoverageExtraTest {
 		game2.attackWithCard(attackerHand2.cards().first())
 		val successFirst = game2.joinAttack(p4, joiner2Hand.cards().first())
 		assertThat(successFirst).isTrue()
-		Assertions.assertThrows(IllegalStateException::class.java) {
+		Assertions.assertThrows(AttackerCanNotJoinHisAttackException::class.java) {
 			game2.joinAttack(p4, joiner2Hand.cards().first())
 		}
 	}
@@ -496,7 +498,7 @@ class GameCoverageExtraTest {
 		val attackCard = Card(Suit.SPADES, Rank.SIX)
 		val defendCard = defenderHand.cards().first()
 		
-		assertThrows<IllegalStateException> { game.defendCard(attackCard, defendCard) }
+		assertThrows<AttackStackDoesNotContainCardException> { game.defendCard(attackCard, defendCard) }
 	}
 	
 	@Test
@@ -517,7 +519,7 @@ class GameCoverageExtraTest {
 		game.attackWithCard(attackCard)
 		
 		// defender has zero cards so any join should be rejected due to capacity
-		Assertions.assertThrows(IllegalStateException::class.java) {
+		Assertions.assertThrows(DefenderDoesNotHaveEnoughCardsException::class.java) {
 			game.joinAttack(p3, joinerHand.cards().first())
 		}
 	}
@@ -534,7 +536,7 @@ class GameCoverageExtraTest {
 		
 		val attackCard = hands[p1]?.cards()?.first() ?: return
 		val defendCard = hands[p2]?.cards()?.first() ?: return
-		assertThrows<IllegalStateException> { game.defendCard(attackCard, defendCard) }
+		assertThrows<NoActiveRoundException> { game.defendCard(attackCard, defendCard) }
 	}
 	
 	@Test
@@ -553,7 +555,7 @@ class GameCoverageExtraTest {
 		
 		// try to defend with a card not in defender's hand
 		val fakeDefend = Card(Suit.CLUBS, Rank.NINE)
-		assertThrows<IllegalStateException> { game.defendCard(attackCard, fakeDefend) }
+		assertThrows<DefenderDoesNotHaveCardException> { game.defendCard(attackCard, fakeDefend) }
 	}
 	
 	@Test
@@ -590,6 +592,76 @@ class GameCoverageAllBranchesTest {
 	}
 	
 	@Test
+	fun `joinAttack throws JoinerNotFoundException when player is missing`() {
+		val attacker = PlayerId("P1")
+		val defender = PlayerId("P2")
+		val joiner = PlayerId("P3")
+		
+		val attackerHand = PlayerHand.create(
+			listOf(Card(Suit.SPADES, Rank.SIX)), id = attacker
+		)
+		val defenderHand = PlayerHand.create(
+			emptyList(),
+			id = defender
+		)
+		
+		val hands = mapOf(
+			attacker to attackerHand,
+			defender to defenderHand
+		)
+		
+		val game = Game(
+			handsOfPlayers = hands,
+			players = listOf(attacker, defender, joiner),
+			deck = MutableDeck(cards = mutableListOf())
+		)
+		
+		game.startRound()
+		
+		val card = attackerHand.cards().first()
+		
+		val ex = assertThrows<JoinerNotFoundException> {
+			game.joinAttack(joiner, card)
+		}
+		
+		assertThat(ex.message).isEqualTo("Player not found")
+	}
+	
+	@Test
+	fun `attackWithCard throws AttackerNotFoundException when attacker is missing`() {
+		val attacker = PlayerId("P1")
+		val defender = PlayerId("P2")
+		
+		val attackerCard = Card(Suit.SPADES, Rank.SIX)
+		val attackerHand = PlayerHand.create(
+			listOf(attackerCard),
+			id = attacker
+		)
+		val defenderHand = PlayerHand.create(
+			emptyList(),
+			id = defender
+		)
+		
+		val hands = mapOf(
+			defender to defenderHand
+		)
+		
+		val game = Game(
+			handsOfPlayers = hands,
+			players = listOf(attacker, defender),
+			deck = MutableDeck(cards = mutableListOf())
+		)
+		
+		game.startRound()
+		
+		val ex = assertThrows<AttackerNotFoundException> {
+			game.attackWithCard(attackerCard)
+		}
+		
+		assertThat(ex.message).isEqualTo("Attacker not found")
+	}
+	
+	@Test
 	fun `defender trump beats non-trump regardless of rank`() {
 		val p1 = PlayerId("P1")
 		val p2 = PlayerId("P2")
@@ -609,6 +681,40 @@ class GameCoverageAllBranchesTest {
 		val success = game.defendCard(attackCard, defendCard)
 		assertThat(success).isTrue()
 		assertThat(game.getRoundCardPairings()[attackCard]).isEqualTo(defendCard)
+	}
+	
+	@Test
+	fun `defendCard throws DefenderNotFoundException when defender is missing`() {
+		val attacker = PlayerId("P1")
+		val defender = PlayerId("P2")
+		
+		val attackCard = Card(Suit.SPADES, Rank.SIX)
+		val defendCard = Card(Suit.HEARTS, Rank.SEVEN)
+		
+		val attackerHand = PlayerHand.create(
+			listOf(attackCard),
+			id = attacker
+		)
+		
+		val hands = mapOf(
+			attacker to attackerHand
+		)
+		
+		val game = Game(
+			handsOfPlayers = hands,
+			players = listOf(attacker, defender),
+			deck = MutableDeck(cards = mutableListOf())
+		)
+		
+		game.startRound()
+		
+		game.attackWithCard(attackCard)
+		
+		val ex = assertThrows<DefenderNotFoundException> {
+			game.defendCard(attackCard, defendCard)
+		}
+		
+		assertThat(ex.message).isEqualTo("Defender not found")
 	}
 	
 	@Test
@@ -636,7 +742,7 @@ class GameCoverageAllBranchesTest {
 	@Test
 	fun `endRound without active round throws`() {
 		val game = Game.create(listOf(PlayerId("P1"), PlayerId("P2")))
-		assertThrows<IllegalStateException> { game.endRound() }
+		assertThrows<NoActiveRoundException> { game.endRound() }
 	}
 	
 	@Test
