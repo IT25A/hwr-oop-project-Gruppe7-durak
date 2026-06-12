@@ -67,6 +67,20 @@ class BoutTest {
 	}
 	
 	@Test
+	fun `add attack from other adds card to attack stack and creates undefended pairing`() {
+		val attacker = PlayerHand.create(emptyList(), PlayerId("P1"))
+		val defender = PlayerHand.create(emptyList(), PlayerId("P2"))
+		val bout = Bout(attacker, defender, Suit.HEARTS)
+		
+		val card = Card(Suit.CLUBS, Rank.SIX)
+		
+		bout.addAttackFromOther(card)
+		
+		assertThat(bout.attackStackCards()).containsExactly(card)
+		assertThat(bout.pairings()).containsEntry(card, null)
+	}
+	
+	@Test
 	fun `defending card is not contained in defending stack, throw DefenderDoesNotHaveCardException`() {
 		//given
 		val attackCard = Card(Suit.SPADES, Rank.SIX)
@@ -358,7 +372,7 @@ class BoutTest {
 		//then
 		assertThat(success).isFalse
 	}
-
+	
 	@Test
 	fun `defending an already defended attacking card throws PairingCardWasAlreadyBeenDefendedException`() {
 		// given
@@ -368,11 +382,11 @@ class BoutTest {
 		val attacker = PlayerHand.create(listOf(attackCard), PlayerId("Attacker"))
 		val defender = PlayerHand.create(listOf(defendCard1, defendCard2), PlayerId("Defender"))
 		val bout = Bout(attacker, defender, Suit.HEARTS)
-
+		
 		// when: attacker plays and defender defends once
 		bout.attack(attackCard)
 		assertThat(bout.defend(attackCard, defendCard1)).isTrue()
-
+		
 		// then: attempting to defend the same attacking card again should throw
 		org.junit.jupiter.api.Assertions.assertThrows(PairingCardWasAlreadyBeenDefendedException::class.java) {
 			bout.defend(attackCard, defendCard2)
