@@ -967,6 +967,55 @@ class GameCoverageAllBranchesTest {
 		assertThat(afterAttacker?.cards()?.size ?: 0).isGreaterThan(0)
 		assertThat(afterDefender?.cards()?.size ?: 0).isGreaterThanOrEqualTo(0)
 	}
+
+	@Test
+	fun `isRoundFullyDefended is false when there are undefended attacks`() {
+		val p1 = PlayerId("P1")
+		val p2 = PlayerId("P2")
+		val attackerHand = PlayerHand.create(listOf(Card(Suit.SPADES, Rank.SIX)), p1)
+		val defenderHand = PlayerHand.create(listOf(Card(Suit.HEARTS, Rank.SEVEN)), p2)
+		val hands = mapOf(p1 to attackerHand, p2 to defenderHand)
+		val game = Game(hands, listOf(p1, p2), Deck.createRandomDeck().toMutableDeck())
+		game.startRound()
+		val attackCard = attackerHand.cards().first()
+		game.attackWithCard(attackCard)
+		// there is an undefended attack -> fully defended should be false
+		assertThat(game.isRoundFullyDefended()).isFalse()
+	}
+
+	@Test
+	fun `hasUndefendedCards is false when no attacks played`() {
+		val game = Game.create(listOf(PlayerId("P1"), PlayerId("P2")))
+		game.startRound()
+		// no attacks yet -> should be false
+		assertThat(game.hasUndefendedCards()).isFalse()
+	}
+
+	@Test
+	fun `replenishHands does not give defender more than six cards`() {
+		val p1 = PlayerId("P1")
+		val p2 = PlayerId("P2")
+		// attacker empty hand, defender has 4 cards
+		val attackerHand = PlayerHand.create(emptyList(), p1)
+		val defenderHand = PlayerHand.create(listOf(
+			Card(Suit.SPADES, Rank.SIX), Card(Suit.HEARTS, Rank.SIX), Card(Suit.CLUBS, Rank.SIX), Card(Suit.DIAMONDS, Rank.SIX)
+		), p2)
+		// create a deck with plenty of cards
+		val deckCards = mutableListOf<Card>()
+		for (s in Suit.entries) {
+			for (r in Rank.entries) {
+				deckCards.add(Card(s, r))
+			}
+		}
+		val deck = MutableDeck(deckCards.toMutableList())
+		val hands = mapOf(p1 to attackerHand, p2 to defenderHand)
+		val game = Game(hands, listOf(p1, p2), deck)
+		// ensure currentRoundAttackers contains attacker
+		game.startRound()
+		// attacker has 0 cards and defender has 4 -> after replenish defender should be exactly 6
+		game.replenishHands()
+		assertThat(game.getPlayerHand(p2)?.cards()?.size).isEqualTo(6)
+	}
 	
 	@Test
 	fun `at the start of a round card-pairs and current attackers are cleared`() {
@@ -1093,5 +1142,79 @@ class GameCoverageAllBranchesTest {
 		// P4: played 1 card -> should have 6 after replenish
 		assertThat(game.getPlayerHand(p4)?.cards()?.size ?: 0).isEqualTo(6)
 	}
+	
+	@Test
+	fun `throws when not first attack and rank not on table and attackStackSize equals defenderCards`() {
+		// given: two players, attacker has two different-rank cards, defender has only 1 card
+		val attackerId = PlayerId("P1")
+		val defenderId = PlayerId("P2")
+		
+		val firstAttack = Card(Suit.SPADES, Rank.SIX)
+		val secondAttackDifferentRank = Card(Suit.CLUBS, Rank.SEVEN) // different rank
+		val defenderCard = Card(Suit.HEARTS, Rank.KING)
+		
+		val hands = mapOf(
+			attackerId to PlayerHand.create(listOf(firstAttack, secondAttackDifferentRank), attackerId),
+			defenderId to PlayerHand.create(listOf(defenderCard), defenderId)
+		)
+		
+		val game = Game(hands, listOf(attackerId, defenderId), Deck.createRandomDeck().toMutableDeck())
+		game.startRound()
+		
+		// first attack must succeed
+		assertThat(game.attackWithCard(firstAttack)).isTrue
+		
+		// second attack (different rank) should throw because attackStackSize == 1 and defender has 1 card
+		Assertions.assertThrows(RankNotOnTableException::class.java) {
+			game.attackWithCard(secondAttackDifferentRank)
+		}
+	}
+	
+	@Test
+	fun `allows when rank is on table even if not first attack and sizes equal`() {
+		// given attacker plays two cards with same rank; defender has 1 card
+		val attackerId = PlayerId("P1")
+		val defenderId = PlayerId("P2")
+		
+		val firstAttack = Card(Suit.SPADES, Rank.SIX)
+		val secondAttackSameRank = Card(Suit.CLUBS, Rank.SIX) // same rank as first attack
+		val defenderCard = Card(Suit.HEARTS, Rank.KING)
+		
+		val hands = mapOf(
+			attackerId to PlayerHand.create(listOf(firstAttack, secondAttackSameRank), attackerId),
+			defenderId to PlayerHand.create(listOf(defenderCard), defenderId)
+		)
+		
+		val game = Game(hands, listOf(attackerId, defenderId), Deck.createRandomDeck().toMutableDeck())
+		game.startRound()
+		
+		assertThat(game.attackWithCard(firstAttack)).isTrue
+		// second attack has same rank as first -> should be allowed
+		assertThat(game.attackWithCard(secondAttackSameRank)).isTrue
+	}
+	
+	@Test
+	fun `allows when defender has more cards than current attack stack even if rank not on table`() {
+		// given: defender has 2 cards, attacker plays two different-rank cards -> second should be allowed
+		val attackerId = PlayerId("P1")
+		val defenderId = PlayerId("P2")
+		
+		val firstAttack = Card(Suit.SPADES, Rank.SIX)
+		val secondAttackDifferentRank = Card(Suit.CLUBS, Rank.SEVEN)
+		val defenderCards = listOf(Card(Suit.HEARTS, Rank.KING), Card(Suit.DIAMONDS, Rank.NINE))
+		
+		val hands = mapOf(
+			attackerId to PlayerHand.create(listOf(firstAttack, secondAttackDifferentRank), attackerId),
+			defenderId to PlayerHand.create(defenderCards, defenderId)
+		)
+		
+		val game = Game(hands, listOf(attackerId, defenderId), Deck.createRandomDeck().toMutableDeck())
+		game.startRound()
+		
+		assertThat(game.attackWithCard(firstAttack)).isTrue
+		// defender has 2 cards while attackStack size is 1 -> allowed to play different rank
+		assertThat(game.attackWithCard(secondAttackDifferentRank)).isTrue
+	}
 }
+
 
