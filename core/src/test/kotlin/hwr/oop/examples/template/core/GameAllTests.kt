@@ -6,13 +6,36 @@ import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.assertThrows
 
 /*
- * Consolidated test file combining the previous three test files:
+ * Consolidated test file combining the previous four test files:
+ * - GameTest.kt
  * - GameMergedTest.kt
  * - GameCoverageExtraTest.kt
  * - GameCoverageAllBranchesTest.kt
  *
  * Duplicate/obsolete files were removed in favour of this single file.
  */
+
+class GameTest {
+	
+	@Test
+	fun `Game can exist`() {
+		//given
+		val p1 = PlayerId("Player1")
+		val p2 = PlayerId("Player2")
+		val handsOfPlayers = mapOf(
+			p1 to PlayerHand.create(id = p1),
+			p2 to PlayerHand.create(id = p2)
+		)
+		val players = listOf(p1, p2)
+		val deck = Deck.createRandomDeck().toMutableDeck()
+		
+		//when
+		val game = Game(handsOfPlayers, players, deck)
+		
+		//then
+		assertThat(game).isNotNull()
+	}
+}
 
 class GameMergedTest {
 	
@@ -227,14 +250,14 @@ class GameMergedTest {
 		game.attackWithCard(attackCard)
 		
 		val secondCard = game.getPlayerHand(attacker)?.cards()?.firstOrNull { it != attackCard } ?: return
-      Assertions.assertThrows(IllegalStateException::class.java) {
-          game.joinAttack(attacker, secondCard)
-      }
+		Assertions.assertThrows(IllegalStateException::class.java) {
+			game.joinAttack(attacker, secondCard)
+		}
 		val defenderCard = game.getPlayerHand(defender)?.cards()?.first() ?: return
-      Assertions.assertThrows(IllegalStateException::class.java) {
-          game.joinAttack(defender, defenderCard)
-      }
-      }
+		Assertions.assertThrows(IllegalStateException::class.java) {
+			game.joinAttack(defender, defenderCard)
+		}
+	}
 	
 	// ==================== Role Rotation Tests ====================
 	
@@ -354,7 +377,10 @@ class GameMergedTest {
 		val card2 = Card(Suit.HEARTS, Rank.SIX)
 		val card3 = Card(Suit.DIAMONDS, Rank.SIX)
 		val p1Hand = PlayerHand.create(listOf(attackCard), p1)
-		val p2Hand = PlayerHand.create(listOf(Card(Suit.SPADES, Rank.JACK), Card(Suit.SPADES, Rank.NINE)), p2) // Only one card - can't defend both attacks
+		val p2Hand = PlayerHand.create(
+			listOf(Card(Suit.SPADES, Rank.JACK), Card(Suit.SPADES, Rank.NINE)),
+			p2
+		) // Only one card - can't defend both attacks
 		val p3Hand = PlayerHand.create(listOf(card2), p3) // Will receive cards from replenish
 		val p4Hand = PlayerHand.create(listOf(card3), p4)
 		
@@ -425,33 +451,34 @@ class GameCoverageExtraTest {
 		game.attackWithCard(attackCard)
 		
 		// joiner has rank EIGHT, attack rank is SIX -> should be rejected
-      Assertions.assertThrows(IllegalStateException::class.java) {
-          game.joinAttack(p3, joinerHand.cards().first())
-      }
-          
-          // try with a card not in player's hand
-          val fakeCard = Card(Suit.SPADES, Rank.NINE)
-          Assertions.assertThrows(IllegalStateException::class.java) {
-              game.joinAttack(p3, fakeCard)
-        }
-          
-          // Make a joiner with a correct rank and succeed, then second attempt should be false
-          val joiner2Hand = PlayerHand.create(listOf(Card(Suit.DIAMONDS, Rank.SIX), Card(Suit.CLUBS, Rank.SIX)), PlayerId("P4"))
-          val p4 = PlayerId("P4")
-          
-          // create a fresh game for this part (use fresh attacker hand instance)
-          val attackerHand2 = PlayerHand.create(listOf(Card(Suit.SPADES, Rank.SIX)), p1)
-          val defenderHand2 = PlayerHand.create(listOf(Card(Suit.HEARTS, Rank.SEVEN), Card(Suit.CLUBS, Rank.EIGHT)), p2)
-          val handsPart = mapOf(p1 to attackerHand2, p2 to defenderHand2, p4 to joiner2Hand)
-          val game2 = Game(handsPart, listOf(p1, p2, p4), Deck.createRandomDeck().toMutableDeck())
-          game2.startRound()
-          game2.attackWithCard(attackerHand2.cards().first())
-          val successFirst = game2.joinAttack(p4, joiner2Hand.cards().first())
-          assertThat(successFirst).isTrue()
-      Assertions.assertThrows(IllegalStateException::class.java) {
-          game2.joinAttack(p4, joiner2Hand.cards().first())
-      }
-      }
+		Assertions.assertThrows(IllegalStateException::class.java) {
+			game.joinAttack(p3, joinerHand.cards().first())
+		}
+		
+		// try with a card not in player's hand
+		val fakeCard = Card(Suit.SPADES, Rank.NINE)
+		Assertions.assertThrows(IllegalStateException::class.java) {
+			game.joinAttack(p3, fakeCard)
+		}
+		
+		// Make a joiner with a correct rank and succeed, then second attempt should be false
+		val joiner2Hand =
+			PlayerHand.create(listOf(Card(Suit.DIAMONDS, Rank.SIX), Card(Suit.CLUBS, Rank.SIX)), PlayerId("P4"))
+		val p4 = PlayerId("P4")
+		
+		// create a fresh game for this part (use fresh attacker hand instance)
+		val attackerHand2 = PlayerHand.create(listOf(Card(Suit.SPADES, Rank.SIX)), p1)
+		val defenderHand2 = PlayerHand.create(listOf(Card(Suit.HEARTS, Rank.SEVEN), Card(Suit.CLUBS, Rank.EIGHT)), p2)
+		val handsPart = mapOf(p1 to attackerHand2, p2 to defenderHand2, p4 to joiner2Hand)
+		val game2 = Game(handsPart, listOf(p1, p2, p4), Deck.createRandomDeck().toMutableDeck())
+		game2.startRound()
+		game2.attackWithCard(attackerHand2.cards().first())
+		val successFirst = game2.joinAttack(p4, joiner2Hand.cards().first())
+		assertThat(successFirst).isTrue()
+		Assertions.assertThrows(IllegalStateException::class.java) {
+			game2.joinAttack(p4, joiner2Hand.cards().first())
+		}
+	}
 	
 	@Test
 	fun `defendCard throws when attacking card not in round`() {
@@ -474,26 +501,26 @@ class GameCoverageExtraTest {
 	
 	@Test
 	fun `joinAttack returns false when defender capacity exceeded`() {
-      val p1 = PlayerId("P1")
-      val p2 = PlayerId("P2")
-      val p3 = PlayerId("P3")
-      
-      val attackerHand = PlayerHand.create(listOf(Card(Suit.SPADES, Rank.SIX)), p1)
-      val defenderHand = PlayerHand.create(emptyList(), p2) // defender has zero capacity
-      val joinerHand = PlayerHand.create(listOf(Card(Suit.CLUBS, Rank.SIX)), p3)
-      
-      val hands = mapOf(p1 to attackerHand, p2 to defenderHand, p3 to joinerHand)
-      val game = Game(hands, listOf(p1, p2, p3), MutableDeck(mutableListOf()))
-      
-      game.startRound()
-      val attackCard = attackerHand.cards().first()
-      game.attackWithCard(attackCard)
-      
-      // defender has zero cards so any join should be rejected due to capacity
-      Assertions.assertThrows(IllegalStateException::class.java) {
-          game.joinAttack(p3, joinerHand.cards().first())
-      }
-  }
+		val p1 = PlayerId("P1")
+		val p2 = PlayerId("P2")
+		val p3 = PlayerId("P3")
+		
+		val attackerHand = PlayerHand.create(listOf(Card(Suit.SPADES, Rank.SIX)), p1)
+		val defenderHand = PlayerHand.create(emptyList(), p2) // defender has zero capacity
+		val joinerHand = PlayerHand.create(listOf(Card(Suit.CLUBS, Rank.SIX)), p3)
+		
+		val hands = mapOf(p1 to attackerHand, p2 to defenderHand, p3 to joinerHand)
+		val game = Game(hands, listOf(p1, p2, p3), MutableDeck(mutableListOf()))
+		
+		game.startRound()
+		val attackCard = attackerHand.cards().first()
+		game.attackWithCard(attackCard)
+		
+		// defender has zero cards so any join should be rejected due to capacity
+		Assertions.assertThrows(IllegalStateException::class.java) {
+			game.joinAttack(p3, joinerHand.cards().first())
+		}
+	}
 	
 	@Test
 	fun `defendCard without active round throws`() {
@@ -836,16 +863,21 @@ class GameCoverageAllBranchesTest {
 	}
 	
 	@Test
-	fun `at the start of a round card-pairs and current attackers are cleared`(){
+	fun `at the start of a round card-pairs and current attackers are cleared`() {
 		val p1 = PlayerId("P1")
 		val p2 = PlayerId("P2")
 		val attackerHand = PlayerHand.create(listOf(Card(Suit.CLUBS, Rank.SIX)), p1)
 		val defenderHand = PlayerHand.create(listOf(Card(Suit.CLUBS, Rank.SEVEN)), p2)
 		val deck = Deck.createRandomDeck().toMutableDeck()
 		
-		
 		val hands = mapOf(p1 to attackerHand, p2 to defenderHand)
-		val game = Game(hands, listOf(p1, p2), deck, roundCardPairings = mutableMapOf(Card (Suit.CLUBS, Rank.SIX) to Card(Suit.CLUBS, Rank.SEVEN)), currentRoundAttackers = mutableListOf(p1))
+		val game = Game(
+			hands,
+			listOf(p1, p2),
+			deck,
+			roundCardPairings = mutableMapOf(Card(Suit.CLUBS, Rank.SIX) to Card(Suit.CLUBS, Rank.SEVEN)),
+			currentRoundAttackers = mutableListOf(p1)
+		)
 		
 		
 		game.startRound()
@@ -855,16 +887,21 @@ class GameCoverageAllBranchesTest {
 	}
 	
 	@Test
-	fun `at the end of a round card-pairs and current attackers are cleared`(){
+	fun `at the end of a round card-pairs and current attackers are cleared`() {
 		val p1 = PlayerId("P1")
 		val p2 = PlayerId("P2")
 		val attackerHand = PlayerHand.create(listOf(Card(Suit.CLUBS, Rank.SIX)), p1)
 		val defenderHand = PlayerHand.create(listOf(Card(Suit.CLUBS, Rank.SEVEN)), p2)
 		val deck = Deck.createRandomDeck().toMutableDeck()
 		
-		
 		val hands = mapOf(p1 to attackerHand, p2 to defenderHand)
-		val game = Game(hands, listOf(p1, p2), deck, roundCardPairings = mutableMapOf(Card (Suit.CLUBS, Rank.SIX) to Card(Suit.CLUBS, Rank.SEVEN)), currentRoundAttackers = mutableListOf(p1))
+		val game = Game(
+			hands,
+			listOf(p1, p2),
+			deck,
+			roundCardPairings = mutableMapOf(Card(Suit.CLUBS, Rank.SIX) to Card(Suit.CLUBS, Rank.SEVEN)),
+			currentRoundAttackers = mutableListOf(p1)
+		)
 		
 		
 		game.startRound()
@@ -876,7 +913,7 @@ class GameCoverageAllBranchesTest {
 	}
 	
 	@Test
-	fun `at the end defender lose and the hands will be replenished`(){
+	fun `at the end defender lose and the hands will be replenished`() {
 		val p1 = PlayerId("P1")
 		val p2 = PlayerId("P2")
 		val p3 = PlayerId("P3")
@@ -888,14 +925,17 @@ class GameCoverageAllBranchesTest {
 		val joinCard = Card(Suit.HEARTS, Rank.SIX) // same rank as attack, will be undefended
 		
 		val p1Hand = PlayerHand.create(listOf(attackCard), p1)
-		val p2Hand = PlayerHand.create(listOf(defendCard, Card(Suit.SPADES, Rank.JACK), Card(Suit.SPADES, Rank.NINE)), p2) // Only one card - can't defend both attacks
+		val p2Hand = PlayerHand.create(
+			listOf(defendCard, Card(Suit.SPADES, Rank.JACK), Card(Suit.SPADES, Rank.NINE)),
+			p2
+		) // Only one card - can't defend both attacks
 		val p3Hand = PlayerHand.create(emptyList(), p3) // Will receive cards from replenish
 		val p4Hand = PlayerHand.create(listOf(joinCard), p4)
 		
 		val hands = mapOf(p1 to p1Hand, p2 to p2Hand, p3 to p3Hand, p4 to p4Hand)
 		val deck = Deck.createRandomDeck().toMutableDeck()
 		val game = Game(hands, listOf(p1, p2, p3, p4), deck)
-
+		
 		// Start round and play
 		game.startRound()
 		
@@ -906,7 +946,7 @@ class GameCoverageAllBranchesTest {
 		// P2 defends with CLUBS SEVEN (higher rank, same suit)
 		val defend1Ok = game.defendCard(attackCard, defendCard)
 		assertThat(defend1Ok).isTrue()
-
+		
 		// P4 joins attack with HEARTS SIX (same rank as first attack)
 		val joinOk = game.joinAttack(p4, joinCard)
 		assertThat(joinOk).isTrue()
@@ -916,34 +956,34 @@ class GameCoverageAllBranchesTest {
 		
 		// Remember the defender's hand size before taking cards
 		val p2CardsBeforeLoss = game.getPlayerHand(p2)?.cards()?.size ?: 0
-
+		
 		// End round - defender loses
 		game.endRound()
-
+		
 		// Verify that P2 (the loser) took the cards
 		val p2CardsAfterLoss = game.getPlayerHand(p2)?.cards()?.size ?: 0
 		assertThat(p2CardsAfterLoss).isGreaterThan(p2CardsBeforeLoss)
-
+		
 		// Verify role rotation: defender -> attacker, next player -> defender
 		assertThat(game.getAttacker()).isEqualTo(p2) // Previous defender becomes attacker
 		assertThat(game.getDefender()).isEqualTo(p3) // Next player becomes defender
-
+		
 		// Verify that current round attackers include the new attacker and the joiner
 		assertThat(game.getCurrentRoundAttackers()).contains(p2)
-
+		
 		// Verify hands are properly replenished after endRound
 		// endRound() calls replenishHands() automatically, so no need to call it again
 		
 		// P1: played 1 card -> should have 6 after replenish
 		assertThat(game.getPlayerHand(p1)?.cards()?.size ?: 0).isEqualTo(6)
-
+		
 		// P2: started with 1, lost and took 2 cards (both pairings), then replenished
 		// P2 should have at least the 2 undefended cards plus more from replenish
 		assertThat(game.getPlayerHand(p2)?.cards()?.size ?: 0).isGreaterThanOrEqualTo(2)
-
+		
 		// P3: started with 0, is now defender -> should be replenished to 6
 		assertThat(game.getPlayerHand(p3)?.cards()?.size ?: 0).isEqualTo(6)
-
+		
 		// P4: played 1 card -> should have 6 after replenish
 		assertThat(game.getPlayerHand(p4)?.cards()?.size ?: 0).isEqualTo(6)
 	}

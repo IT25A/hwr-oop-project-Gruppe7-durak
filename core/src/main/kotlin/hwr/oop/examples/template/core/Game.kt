@@ -92,11 +92,11 @@ class Game(
 		}
 		
 		val attacker = getAttacker()
-		val attackerHand = handsOfPlayers[attacker] ?: throw IllegalStateException("Attacker not found")
-		val bout = currentBout ?: throw IllegalStateException("No active bout")
+		val attackerHand = handsOfPlayers[attacker] ?: throw AttackerNotFoundException("Attacker not found")
+		val bout = currentBout ?: throw NoActiveBoutException("No active bout")
 		
 		if (!attackerHand.contains(card)) {
-			throw IllegalStateException("Attacker does not have the card: $card")
+			throw AttackerDoesNotHaveCardException("Attacker does not have the card: $card")
 		}
 		
 		// Check ranks on table (including defended cards)
@@ -104,7 +104,7 @@ class Game(
 		val isFirstAttack = bout.attackStackCards().isEmpty()
 		
 		if (!isFirstAttack && card.rank() !in ranksOnTable && bout.attackStackCards().size >= handsOfPlayers[getDefender()]?.cards()?.size ?: 0) {
-			return false
+			throw RankNotOnTableException("Card rank does not match any rank on the table, or defender cannot take more cards")
 		}
 		
 		// Delegate to bout
@@ -126,35 +126,35 @@ class Game(
 	 */
 	fun joinAttack(playerId: PlayerId, card: Card): Boolean {
 		if (!roundActive) {
-			throw IllegalStateException("No active round")
+			throw NoActiveBoutException("No active round")
 		}
 		
 		if (playerId == getAttacker() || playerId == getDefender()) {
-			throw IllegalStateException("Attacker and defender cannot join the attack")
+			throw AttackerAndDefenderCanNotJoinAttackException("Attacker and defender cannot join the attack")
 		}
 		
 		if (currentRoundAttackers.contains(playerId)) {
-			throw IllegalStateException("error")
+			throw AttackerCanNotJoinHisAttackException("Player already joined the attack")
 		}
 		
-		val joiningHand = handsOfPlayers[playerId] ?: throw IllegalStateException("Player not found")
+		val joiningHand = handsOfPlayers[playerId] ?: throw JoinerNotFoundException("Player not found")
 		
 		if (!joiningHand.contains(card)) {
-			throw IllegalStateException("player doesnt have cards")
+			throw JoinerDoesNotHaveCardException("Joiner doesn't have the card")
 		}
 		
-		val bout = currentBout ?: throw IllegalStateException("No active bout")
+		val bout = currentBout ?: throw NoActiveBoutException("No active bout")
 		
 		// Check if card rank matches ranks on table (including defended cards)
 		val ranksOnTable = bout.ranksOnTable()
 		if (card.rank() !in ranksOnTable) {
-			throw IllegalStateException("Card rank does not match any rank on the table")
+			throw RankNotOnTableException("Card rank does not match any rank on the table")
 		}
 		
 		// Cannot exceed defender's maximum playable cards
 		val defenderCardCount = handsOfPlayers[getDefender()]?.cards()?.size ?: 0
 		if (bout.attackStackCards().size > defenderCardCount) {
-			throw IllegalStateException("Defender does not have enough cards")
+			throw DefenderDoesNotHaveEnoughCardsException("Defender does not have enough cards")
 		}
 		
 		// Add the attacking card via bout
@@ -175,20 +175,20 @@ class Game(
 	 */
 	fun defendCard(attackingCard: Card, defendingCard: Card): Boolean {
 		if (!roundActive) {
-			throw IllegalStateException("No active round")
+			throw NoActiveRoundException("No active round")
 		}
 		
-		val bout = currentBout ?: throw IllegalStateException("No active bout")
+		val bout = currentBout ?: throw NoActiveBoutException("No active bout")
 		
 		if (!bout.attackStackCards().contains(attackingCard)) {
-			throw IllegalStateException("Attacking card not in round")
+			throw AttackStackDoesNotContainCardException("Attacking stack does not contain card")
 		}
 		
 		val defender = getDefender()
-		val defenderHand = handsOfPlayers[defender] ?: throw IllegalStateException("Defender not found")
+		val defenderHand = handsOfPlayers[defender] ?: throw DefenderNotFoundException("Defender not found")
 		
 		if (!defenderHand.contains(defendingCard)) {
-			throw IllegalStateException("Defender does not have the card")
+			throw DefenderDoesNotHaveCardException("Defender does not have the card")
 		}
 		
 		// Delegate to bout
@@ -226,10 +226,10 @@ class Game(
 	 */
 	fun endRound() {
 		if (!roundActive) {
-			throw IllegalStateException("No active round")
+			throw NoActiveRoundException("No active round")
 		}
 		
-		val bout = currentBout ?: throw IllegalStateException("No active bout")
+		val bout = currentBout ?: throw NoActiveBoutException("No active bout")
 		val defender = getDefender()
 		val result = bout.resolve()
 		
