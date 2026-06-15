@@ -8,8 +8,9 @@ class Trump private constructor(
 	companion object {
 		fun drawFromDeck(deck: MutableDeck): Pair<MutableDeck, Trump> {
 			val trumpCard = deck.draw()!!
-			deck.cards.add(trumpCard) // Karte ans Ende legen
+			deck.cards.add(trumpCard)
 			return Pair(deck, Trump(trumpCard.suit()))
 		}
 	}
 }
+

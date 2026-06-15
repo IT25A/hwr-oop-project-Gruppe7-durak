@@ -7,3 +7,4 @@ enum class Suit {
 	DIAMONDS,
 	
 }
+
