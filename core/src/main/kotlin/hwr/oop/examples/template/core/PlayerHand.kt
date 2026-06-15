@@ -17,17 +17,17 @@ data class PlayerHand constructor(
 	
 	fun contains(card: Card): Boolean = cardsInternal.contains(card)
 	
-	// returns a new PlayerHand without the card
+	
 	fun without(card: Card): PlayerHand {
 		return PlayerHand(id, cardsInternal.filter { it != card })
 	}
 	
-	// returns a new PlayerHand with added cards
+	
 	fun withAdded(cards: Collection<Card>): PlayerHand {
 		return PlayerHand(id, cardsInternal + cards)
 	}
 	
-	// read-only view for tests / callers
+	
 	fun cards(): List<Card> = cardsInternal.toList()
 	
 	fun getId(): PlayerId = id
