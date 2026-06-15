@@ -16,3 +16,4 @@ data class Card(
 		return cardValues[rank] ?: 0
 	}
 }
+

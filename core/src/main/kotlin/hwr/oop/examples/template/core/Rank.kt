@@ -13,3 +13,4 @@ enum class Rank(
 	KING(13),
 	ACE(14),
 }
+

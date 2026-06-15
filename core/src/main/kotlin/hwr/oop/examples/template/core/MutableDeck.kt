@@ -1,16 +1,5 @@
 package hwr.oop.examples.template.core
 
-/*
-data class MutableDeck(
-	val cards: MutableList<Card>
-) {
-	fun draw(count: Int): List<Card> {
-		val drawn = cards.take(count)
-		(1..count).forEach { _ -> cards.removeFirst() }
-		return drawn
-	}
-}
-*/
 
 data class MutableDeck(
 	val cards: MutableList<Card> = mutableListOf(),
@@ -21,7 +10,7 @@ data class MutableDeck(
 	}
 	
 	fun dealTo(playerHand: PlayerHand, count: Int): PlayerHand {
-		// Start with the provided hand and accumulate drawn cards into the returned hand
+		
 		var newPlayerHand = playerHand
 		repeat(count) {
 			val card = draw()
@@ -32,3 +21,4 @@ data class MutableDeck(
 		return newPlayerHand
 	}
 }
+
