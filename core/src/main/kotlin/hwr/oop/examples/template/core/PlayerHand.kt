@@ -1,11 +1,6 @@
 package hwr.oop.examples.template.core
 
-@JvmInline
-value class PlayerId(private val value: String) {
-
-}
-
-data class PlayerHand constructor(
+data class PlayerHand (
 	private val id: PlayerId,
 	private val cardsInternal: List<Card>,
 ) {

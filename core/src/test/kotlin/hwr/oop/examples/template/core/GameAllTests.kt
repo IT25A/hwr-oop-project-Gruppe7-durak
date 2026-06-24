@@ -133,7 +133,7 @@ class GameMergedTest {
 		val game = Game(hands, players, Deck.createRandomDeck().toMutableDeck())
 		
 		val joinCard = hands[players[2]]?.cards()?.first() ?: return
-		assertThrows<NoActiveBoutException> { game.joinAttack(players[2], joinCard) }
+		assertThrows<NoActiveRoundException> { game.joinAttack(players[2], joinCard) }
 	}
 	
 	// ==================== Attack / Defend Flow ====================

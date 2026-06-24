@@ -62,7 +62,7 @@ class BoutTest {
 		val cardNotInStack = Card(Suit.HEARTS, Rank.NINE)
 		
 		//then
-		org.junit.jupiter.api.Assertions.assertThrows(AttackStackDoesNotContainCardException::class.java) {
+		assertThrows(AttackStackDoesNotContainCardException::class.java) {
 			bout.defend(cardNotInStack, card)
 		}
 	}
@@ -92,7 +92,7 @@ class BoutTest {
 		val card = Card(Suit.HEARTS, Rank.EIGHT)
 		bout.attack(attackCard)
 		//then
-		org.junit.jupiter.api.Assertions.assertThrows(DefenderDoesNotHaveCardException::class.java) {
+		assertThrows(DefenderDoesNotHaveCardException::class.java) {
 			bout.defend(attackCard, card)
 		}
 	}

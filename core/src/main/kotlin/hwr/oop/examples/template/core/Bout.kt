@@ -20,7 +20,7 @@ class Bout(
 	
 	
 	fun attack(card: Card): Boolean {
-		if (!attacker.contains(card)) throw AttackerDoesNotHaveCardException("Attacker does not have the card: $card")
+		if (!attacker.contains(card)) throw AttackerDoesNotHaveCardException("$card")
 		attacker = attacker.without(card)
 		attackStack.add(card)
 		pairings[card] = null
@@ -36,9 +36,9 @@ class Bout(
 	fun defend(attackingCard: Card, defendingCard: Card): Boolean {
 		if (!attackStack.cards()
 				.contains(attackingCard)
-		) throw AttackStackDoesNotContainCardException("Attack stack does not contain the attacking card: $attackingCard")
-		if (!defender.contains(defendingCard)) throw DefenderDoesNotHaveCardException("Defender does not have the card: $defendingCard")
-		if (pairings[attackingCard] != null) throw PairingCardWasAlreadyBeenDefendedException("The attacking card has already been defended: $attackingCard")
+		) throw AttackStackDoesNotContainCardException("$attackingCard")
+		if (!defender.contains(defendingCard)) throw DefenderDoesNotHaveCardException("$attackingCard")
+		if (pairings[attackingCard] != null) throw PairingCardWasAlreadyBeenDefendedException("$attackingCard")
 		
 		val defendingWins = cardBeats(attackingCard, defendingCard)
 		if (defendingWins) {
@@ -150,10 +150,3 @@ class Bout(
 		reset()
 	}
 }
-
-
-data class BoutResult(
-	val defenderWon: Boolean,
-	val tableCards: List<Card>,
-	val winner: PlayerHand,
-)
