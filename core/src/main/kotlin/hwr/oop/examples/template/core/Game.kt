@@ -74,7 +74,7 @@ class Game(
 	
 	fun attackWithCard(card: Card): Boolean {
 		if (!roundActive) {
-			throw IllegalStateException("No active round")
+			throw NoActiveRoundException()
 		}
 		
 		val attacker = getAttacker()

@@ -393,5 +393,4 @@ class BoutTest {
 			bout.defend(attackCard, defendCard2)
 		}
 	}
-	
 }

@@ -27,7 +27,6 @@ class Bout(
 		return true
 	}
 	
-	
 	fun addAttackFromOther(card: Card) {
 		attackStack.add(card)
 		pairings[card] = null
@@ -58,32 +57,26 @@ class Bout(
 		return ranks
 	}
 	
-	
 	fun cardBeats(attacking: Card, defending: Card): Boolean {
 		val attackRank = attacking.rank()
 		val defendRank = defending.rank()
 		val attackValue = attacking.getCardValue(attackRank)
 		val defendValue = defending.getCardValue(defendRank)
 		
-		
 		if (attacking.suit() == defending.suit()) {
 			return defendValue > attackValue
 		}
-		
 		
 		if (defending.suit() == trump && attacking.suit() != trump) {
 			return true
 		}
 		
-		
 		return false
 	}
-	
 	
 	fun isFullyDefended(): Boolean {
 		return attackStack.cards().all { pairings[it] != null }
 	}
-	
 	
 	fun resolve(): BoutResult {
 		if (isFullyDefended()) {
@@ -106,41 +99,33 @@ class Bout(
 		}
 	}
 	
-	
 	private fun reset() {
 		attackStack.clear()
 		defendStack.clear()
 		pairings.clear()
 	}
 	
-	
 	fun promoteDefendToAttack() {
 		
 		val finishedAttacks = attackStack.cards()
 		
-		
 		finishedAttacks.forEach { pairings.remove(it) }
-		
 		
 		attackStack.clear()
 		
 		val promoted = defendStack.cards()
 		promoted.forEach { attackStack.add(it) }
 		
-		
 		promoted.forEach { pairings[it] = null }
-		
 		
 		defendStack.clear()
 		
 	}
 	
-	
 	fun finalizeRound(discard: DiscardPile) {
 		val toDiscard = mutableListOf<Card>()
 		
 		toDiscard.addAll(tablePile)
-		
 		
 		toDiscard.addAll(attackStack.cards().filter { card -> !toDiscard.contains(card) })
 		toDiscard.addAll(defendStack.cards().filter { card -> !toDiscard.contains(card) })
