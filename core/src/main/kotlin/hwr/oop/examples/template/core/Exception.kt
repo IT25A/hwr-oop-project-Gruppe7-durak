@@ -29,3 +29,5 @@ class DefenderNotFoundException() : Exception("Defender not found") {}
 class JoinerDoesNotHaveCardException() : Exception("Joiner doesn't have the card") {}
 
 class DefenderDoesNotHaveEnoughCardsException() : Exception("Defender does not have enough cards") {}
+class CardDoesNotBeatAttackingCardException(attackingCard: String, defendingCard: String) :
+	Exception("Defending card $defendingCard does not beat attacking card $attackingCard")

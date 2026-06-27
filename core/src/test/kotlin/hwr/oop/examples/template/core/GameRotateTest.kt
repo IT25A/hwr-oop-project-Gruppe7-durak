@@ -13,7 +13,6 @@ class GameRotateTest {
 		assertThat(game.getAttacker()).isEqualTo(p1)
 		assertThat(game.getDefender()).isEqualTo(p2)
 		
-		game.startRound()
 		game.endRound()
 		
 		assertThat(game.getAttacker()).isEqualTo(p2)
@@ -29,7 +28,6 @@ class GameRotateTest {
 		sequence.add(game.getAttacker() to game.getDefender())
 		
 		repeat(3) {
-			game.startRound()
 			game.endRound()
 			sequence.add(game.getAttacker() to game.getDefender())
 		}

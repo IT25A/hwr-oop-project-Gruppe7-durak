@@ -17,25 +17,17 @@ class GameRoundTest {
 	}
 	
 	@Test
-	fun `isRoundActive initially false`() {
+	fun `isRoundActive initially true`() {
 		val game = Game.create(listOf(PlayerId("P1"), PlayerId("P2")))
-		assertThat(game.isRoundActive()).isFalse()
+		assertThat(game.isRoundActive()).isTrue()
 	}
 	
 	@Test
-	fun `round can be started and ended`() {
+	fun `round can be ended and automatically restarts`() {
 		val game = Game.create(listOf(PlayerId("P1"), PlayerId("P2")))
-		game.startRound()
 		assertThat(game.isRoundActive()).isTrue()
 		game.endRound()
-		assertThat(game.isRoundActive()).isFalse()
-	}
-	
-	@Test
-	fun `cannot start round twice`() {
-		val game = Game.create(listOf(PlayerId("P1"), PlayerId("P2")))
-		game.startRound()
-		assertThrows<IllegalStateException> { game.startRound() }
+		assertThat(game.isRoundActive()).isTrue()
 	}
 	
 	@Test
@@ -46,7 +38,7 @@ class GameRoundTest {
 			p1 to PlayerHand.create(listOf(Card(Suit.SPADES, Rank.SIX)), p1),
 			p2 to PlayerHand.create(listOf(Card(Suit.HEARTS, Rank.SEVEN)), p2)
 		)
-		val game = Game(hands, listOf(p1, p2), Deck.createRandomDeck().toMutableDeck())
+		val game = Game(hands, listOf(p1, p2), Deck.createRandomDeck().toMutableDeck(), roundActive = false)
 		
 		val attackCard = hands[p1]?.cards()?.first() ?: return
 		assertThrows<NoActiveRoundException> { game.attackWithCard(attackCard) }
@@ -66,13 +58,17 @@ class GameRoundTest {
 			listOf(p1, p2),
 			deck,
 			roundCardPairings = mutableMapOf(Card(Suit.CLUBS, Rank.SIX) to Card(Suit.CLUBS, Rank.SEVEN)),
-			currentRoundAttackers = mutableListOf(p1)
+			currentRoundAttackers = mutableListOf(p1),
+			roundActive = false
 		)
+		// After manual init through constructor with roundActive=false, we need some way to test if initRound works.
+		// But initRound is private. In a real game we use Game.create() or endRound().
+		// Let's use endRound() to trigger it, but we need an active round for that.
 		
+		val gameActive = Game(hands, listOf(p1, p2), deck, roundActive = true, currentBout = Bout(attackerHand, defenderHand, Suit.HEARTS))
+		gameActive.endRound()
 		
-		game.startRound()
-		
-		assertThat(game.getRoundCardPairings()).isEmpty()
-		assertThat(game.getCurrentRoundAttackers()).containsExactly(p1)
+		assertThat(gameActive.getRoundCardPairings()).isEmpty()
+		assertThat(gameActive.getCurrentRoundAttackers()).containsExactly(p2) // rotates
 	}
 }

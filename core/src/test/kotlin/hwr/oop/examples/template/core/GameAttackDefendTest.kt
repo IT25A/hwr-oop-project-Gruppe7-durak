@@ -16,15 +16,13 @@ class GameAttackDefendTest {
 		val defenderHand = PlayerHand.create(emptyList(), p2)
 		
 		val hands = mapOf(p1 to attackerHand, p2 to defenderHand)
-		val game = Game(hands, listOf(p1, p2), MutableDeck(mutableListOf()))
+		val game = Game(hands, listOf(p1, p2), MutableDeck(mutableListOf()), roundActive = true)
 		
-		game.startRound()
 		
 		val first = attackerHand.cards().first()
 		val second = attackerHand.cards().last()
 		
-		val ok1 = game.attackWithCard(first)
-		assertThat(ok1).isTrue()
+		game.attackWithCard(first)
 		
 		Assertions.assertThrows(RankNotOnTableException::class.java) {
 			game.attackWithCard(second)
@@ -38,20 +36,18 @@ class GameAttackDefendTest {
 		val defenderHand = PlayerHand.create(listOf(Card(Suit.HEARTS, Rank.SIX)), p2)
 		
 		val hands = mapOf(p1 to attackerHand, p2 to defenderHand)
-		val game = Game(hands, listOf(p1, p2), Deck.createRandomDeck().toMutableDeck())
+		val game = Game(hands, listOf(p1, p2), Deck.createRandomDeck().toMutableDeck(), roundActive = true)
 		
-		game.startRound()
 		val attackCard = attackerHand.cards().first()
 		game.attackWithCard(attackCard)
 		
 		val defendCard = defenderHand.cards().first()
-		val success = game.defendCard(attackCard, defendCard)
-		assertThat(success).isTrue()
+		game.defendCard(attackCard, defendCard)
 		assertThat(game.getRoundCardPairings()[attackCard]).isEqualTo(defendCard)
 	}
 	
 	@Test
-	fun `defendCard returns false when defending card does not beat attacking card (different non-trump suit)`() {
+	fun `defendCard throws exception when defending card does not beat attacking card (different non-trump suit)`() {
 		val attackCard = Card(Suit.CLUBS, Rank.KING)
 		val defenderCard = Card(Suit.DIAMONDS, Rank.QUEEN)
 		
@@ -59,13 +55,13 @@ class GameAttackDefendTest {
 		val defenderHand = PlayerHand.create(listOf(defenderCard), p2)
 		
 		val hands = mapOf(p1 to attackerHand, p2 to defenderHand)
-		val game = Game(hands, listOf(p1, p2), Deck.createRandomDeck().toMutableDeck())
+		val game = Game(hands, listOf(p1, p2), Deck.createRandomDeck().toMutableDeck(), roundActive = true)
 		
-		game.startRound()
 		game.attackWithCard(attackCard)
 		
-		val ok = game.defendCard(attackCard, defenderCard)
-		assertThat(ok).isFalse()
+		Assertions.assertThrows(CardDoesNotBeatAttackingCardException::class.java) {
+			game.defendCard(attackCard, defenderCard)
+		}
 	}
 	
 	@Test
@@ -77,14 +73,10 @@ class GameAttackDefendTest {
 		val defenderHand = PlayerHand.create(listOf(Card(Suit.HEARTS, Rank.SEVEN), Card(Suit.HEARTS, Rank.EIGHT)), p2)
 		
 		val hands = mapOf(p1 to attackerHand, p2 to defenderHand)
-		val game = Game(hands, listOf(p1, p2), Deck.createRandomDeck().toMutableDeck())
+		val game = Game(hands, listOf(p1, p2), Deck.createRandomDeck().toMutableDeck(), roundActive = true)
 		
-		game.startRound()
-		val ok1 = game.attackWithCard(attackCard1)
-		assertThat(ok1).isTrue()
-		
-		val ok2 = game.attackWithCard(attackCard2)
-		assertThat(ok2).isTrue()
+		game.attackWithCard(attackCard1)
+		game.attackWithCard(attackCard2)
 		assertThat(game.getRoundCardPairings().size).isEqualTo(2)
 	}
 	
@@ -101,9 +93,8 @@ class GameAttackDefendTest {
 		
 		val deck = MutableDeck(deckCards.toMutableList())
 		val hands = mapOf(p1 to attackerHand, p2 to defenderHand)
-		val game = Game(hands, listOf(p1, p2), deck)
+		val game = Game(hands, listOf(p1, p2), deck, roundActive = true)
 		
-		game.startRound()
 		
 		game.replenishHands()
 		
@@ -119,8 +110,7 @@ class GameAttackDefendTest {
 		val attackerHand = PlayerHand.create(listOf(Card(Suit.SPADES, Rank.SIX)), p1)
 		val defenderHand = PlayerHand.create(listOf(Card(Suit.HEARTS, Rank.SEVEN)), p2)
 		val hands = mapOf(p1 to attackerHand, p2 to defenderHand)
-		val game = Game(hands, listOf(p1, p2), Deck.createRandomDeck().toMutableDeck())
-		game.startRound()
+		val game = Game(hands, listOf(p1, p2), Deck.createRandomDeck().toMutableDeck(), roundActive = true)
 		val attackCard = attackerHand.cards().first()
 		game.attackWithCard(attackCard)
 		// there is an undefended attack -> fully defended should be false
@@ -130,7 +120,6 @@ class GameAttackDefendTest {
 	@Test
 	fun `hasUndefendedCards is false when no attacks played`() {
 		val game = Game.create(listOf(PlayerId("P1"), PlayerId("P2")))
-		game.startRound()
 		// no attacks yet -> should be false
 		assertThat(game.hasUndefendedCards()).isFalse()
 	}
@@ -155,8 +144,7 @@ class GameAttackDefendTest {
 		}
 		val deck = MutableDeck(deckCards.toMutableList())
 		val hands = mapOf(p1 to attackerHand, p2 to defenderHand)
-		val game = Game(hands, listOf(p1, p2), deck)
-		game.startRound()
+		val game = Game(hands, listOf(p1, p2), deck, roundActive = true)
 		game.replenishHands()
 		assertThat(game.getPlayerHand(p2)?.cards()?.size).isEqualTo(6)
 	}
@@ -176,11 +164,10 @@ class GameAttackDefendTest {
 			defenderId to PlayerHand.create(listOf(defenderCard), defenderId)
 		)
 		
-		val game = Game(hands, listOf(attackerId, defenderId), Deck.createRandomDeck().toMutableDeck())
-		game.startRound()
+		val game = Game(hands, listOf(attackerId, defenderId), Deck.createRandomDeck().toMutableDeck(), roundActive = true)
 		
-		assertThat(game.attackWithCard(firstAttack)).isTrue
-		assertThat(game.attackWithCard(secondAttackSameRank)).isTrue
+		game.attackWithCard(firstAttack)
+		game.attackWithCard(secondAttackSameRank)
 	}
 	
 	@Test
@@ -198,10 +185,9 @@ class GameAttackDefendTest {
 			defenderId to PlayerHand.create(defenderCards, defenderId)
 		)
 		
-		val game = Game(hands, listOf(attackerId, defenderId), Deck.createRandomDeck().toMutableDeck())
-		game.startRound()
+		val game = Game(hands, listOf(attackerId, defenderId), Deck.createRandomDeck().toMutableDeck(), roundActive = true)
 		
-		assertThat(game.attackWithCard(firstAttack)).isTrue
-		assertThat(game.attackWithCard(secondAttackDifferentRank)).isTrue
+		game.attackWithCard(firstAttack)
+		game.attackWithCard(secondAttackDifferentRank)
 	}
 }
