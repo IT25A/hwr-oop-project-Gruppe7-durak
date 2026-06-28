@@ -13,7 +13,7 @@ class GameEndTest {
 	
 	@Test
 	fun `endRound without active round throws`() {
-		val game = Game.create(listOf(PlayerId("P1"), PlayerId("P2")))
+		val game = Game(emptyMap(), listOf(p1, p2), MutableDeck(mutableListOf()), roundActive = false)
 		assertThrows<NoActiveRoundException> { game.endRound() }
 	}
 	
@@ -27,12 +27,10 @@ class GameEndTest {
 		
 		val hands = mapOf(p1 to attackerHand, p2 to defenderHand)
 		val deck = MutableDeck(mutableListOf())
-		val game = Game(hands, listOf(p1, p2), deck)
+		val game = Game(hands, listOf(p1, p2), deck, roundActive = true)
 		
-		game.startRound()
 		game.attackWithCard(attackCard)
-		val defended = game.defendCard(attackCard, defendCard)
-		assertThat(defended).isTrue()
+		game.defendCard(attackCard, defendCard)
 		
 		game.endRound()
 		
@@ -54,16 +52,14 @@ class GameEndTest {
 		
 		val hands = mapOf(p1 to attackerHand, p2 to defenderHand)
 		val deck = MutableDeck(mutableListOf())
-		val game = Game(hands, listOf(p1, p2), deck)
+		val game = Game(hands, listOf(p1, p2), deck, roundActive = true)
 		
-		game.startRound()
 		game.attackWithCard(attack1)
 		// attempt to defend first attack (may or may not succeed depending on card ordering)
 		game.defendCard(attack1, defend1)
 		
 		// attacker plays a second card which defender cannot beat
-		val ok2 = game.attackWithCard(attack2)
-		assertThat(ok2).isTrue()
+		game.attackWithCard(attack2)
 		
 		// end round -> defender loses and must take both attack and defend cards
 		game.endRound()
@@ -81,9 +77,8 @@ class GameEndTest {
 		
 		val hands = mapOf(p1 to attackerHand, p2 to defenderHand)
 		val deck = MutableDeck(mutableListOf())
-		val game = Game(hands, listOf(p1, p2), deck)
+		val game = Game(hands, listOf(p1, p2), deck, roundActive = true)
 		
-		game.startRound()
 		game.attackWithCard(attackCard)
 		
 		// Defender cannot defend -> endRound should make defender take the card
@@ -117,11 +112,11 @@ class GameEndTest {
 			listOf(p1, p2),
 			deck,
 			roundCardPairings = mutableMapOf(Card(Suit.CLUBS, Rank.SIX) to Card(Suit.CLUBS, Rank.SEVEN)),
-			currentRoundAttackers = mutableListOf(p1)
+			currentRoundAttackers = mutableListOf(p1),
+			roundActive = true
 		)
 		
 		
-		game.startRound()
 		game.attackWithCard(Card(Suit.CLUBS, Rank.SIX))
 		game.endRound()
 		
@@ -145,18 +140,12 @@ class GameEndTest {
 		
 		val hands = mapOf(p1 to p1Hand, p2 to p2Hand, p3 to p3Hand, p4 to p4Hand)
 		val deck = Deck.createRandomDeck().toMutableDeck()
-		val game = Game(hands, listOf(p1, p2, p3, p4), deck)
+		val game = Game(hands, listOf(p1, p2, p3, p4), deck, roundActive = true)
 		
-		game.startRound()
 		
-		val attack1Ok = game.attackWithCard(attackCard)
-		assertThat(attack1Ok).isTrue()
-		
-		val defend1Ok = game.defendCard(attackCard, defendCard)
-		assertThat(defend1Ok).isTrue()
-		
-		val joinOk = game.joinAttack(p4, joinCard)
-		assertThat(joinOk).isTrue()
+		game.attackWithCard(attackCard)
+		game.defendCard(attackCard, defendCard)
+		game.joinAttack(p4, joinCard)
 		
 		assertThat(game.hasUndefendedCards()).isTrue()
 		

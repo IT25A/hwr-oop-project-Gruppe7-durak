@@ -22,12 +22,12 @@ class Bout(
 	fun defendStackCards(): List<Card> = defendStack.cards().toList()
 	
 	
-	fun attack(card: Card): Boolean {
+	fun attack(card: Card): Bout {
 		if (!attacker.contains(card)) throw AttackerDoesNotHaveCardException("$card")
 		attacker = attacker.without(card)
 		attackStack.add(card)
 		pairings[card] = null
-		return true
+		return this
 	}
 	
 	fun addAttackFromOther(card: Card) {
@@ -35,7 +35,7 @@ class Bout(
 		pairings[card] = null
 	}
 	
-	fun defend(attackingCard: Card, defendingCard: Card): Boolean {
+	fun defend(attackingCard: Card, defendingCard: Card): Bout {
 		if (!attackStack.cards()
 				.contains(attackingCard)
 		) throw AttackStackDoesNotContainCardException("$attackingCard")
@@ -47,9 +47,9 @@ class Bout(
 			defender = defender.without(defendingCard)
 			defendStack.add(defendingCard)
 			pairings[attackingCard] = defendingCard
-			return true
+			return this
 		}
-		return false
+		throw CardDoesNotBeatAttackingCardException("$attackingCard", "$defendingCard")
 	}
 	
 	

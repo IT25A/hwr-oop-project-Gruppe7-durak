@@ -25,7 +25,6 @@ class GameJoinTest {
 	fun `other players can join attack in 3-player game`() {
 		val players = listOf(PlayerId("P1"), PlayerId("P2"), PlayerId("P3"))
 		val game = Game.create(players)
-		game.startRound()
 		
 		val attacker = game.getAttacker()
 		val defender = game.getDefender()
@@ -35,9 +34,8 @@ class GameJoinTest {
 		val joinerCard = game.getPlayerHand(third)?.cards()?.firstOrNull { it.rank() == attackCard.rank() } ?: return
 		
 		game.attackWithCard(attackCard)
-		val joined = game.joinAttack(third, joinerCard)
+		game.joinAttack(third, joinerCard)
 		
-		assertThat(joined).isTrue()
 		assertThat(game.getCurrentRoundAttackers()).contains(third)
 		assertThat(game.getRoundCardPairings().size).isEqualTo(2)
 	}
@@ -46,7 +44,6 @@ class GameJoinTest {
 	fun `attacker cannot join own attack and defender cannot join`() {
 		val players = listOf(PlayerId("P1"), PlayerId("P2"), PlayerId("P3"))
 		val game = Game.create(players)
-		game.startRound()
 		
 		val attacker = game.getAttacker()
 		val defender = game.getDefender()
@@ -82,8 +79,7 @@ class GameJoinTest {
 		val p4Hand = PlayerHand.create(listOf(card3), p4)
 		
 		val hands = mapOf(p1 to p1Hand, p2 to p2Hand, p3 to p3Hand, p4 to p4Hand)
-		val game = Game(hands, listOf(p1, p2, p3, p4), deck = MutableDeck(mutableListOf()))
-		game.startRound()
+		val game = Game(hands, listOf(p1, p2, p3, p4), deck = MutableDeck(mutableListOf()), roundActive = true)
 		
 		val attacker = game.getAttacker()
 		val defender = game.getDefender()
@@ -91,14 +87,12 @@ class GameJoinTest {
 		
 		game.attackWithCard(attackCard)
 		
-		val success2 = game.joinAttack(p3, card2)
+		game.joinAttack(p3, card2)
 		
-		val success3 = game.joinAttack(p4, card3)
+		game.joinAttack(p4, card3)
 		
-		
-		
-		if (success2) assertThat(game.getCurrentRoundAttackers()).contains(p3)
-		if (success3) assertThat(game.getCurrentRoundAttackers()).contains(p4)
+		assertThat(game.getCurrentRoundAttackers()).contains(p3)
+		assertThat(game.getCurrentRoundAttackers()).contains(p4)
 	}
 	
 	@Test
@@ -112,9 +106,8 @@ class GameJoinTest {
 		val joinerHand = PlayerHand.create(listOf(Card(Suit.CLUBS, Rank.EIGHT)), p3)
 		
 		val hands = mapOf(p1 to attackerHand, p2 to defenderHand, p3 to joinerHand)
-		val game = Game(hands, listOf(p1, p2, p3), Deck.createRandomDeck().toMutableDeck())
+		val game = Game(hands, listOf(p1, p2, p3), Deck.createRandomDeck().toMutableDeck(), roundActive = true)
 		
-		game.startRound()
 		
 		val attackCard = attackerHand.cards().first()
 		game.attackWithCard(attackCard)
@@ -139,11 +132,10 @@ class GameJoinTest {
 		val attackerHand2 = PlayerHand.create(listOf(Card(Suit.SPADES, Rank.SIX)), p1)
 		val defenderHand2 = PlayerHand.create(listOf(Card(Suit.HEARTS, Rank.SEVEN), Card(Suit.CLUBS, Rank.EIGHT)), p2)
 		val handsPart = mapOf(p1 to attackerHand2, p2 to defenderHand2, p4 to joiner2Hand)
-		val game2 = Game(handsPart, listOf(p1, p2, p4), Deck.createRandomDeck().toMutableDeck())
-		game2.startRound()
+		val game2 = Game(handsPart, listOf(p1, p2, p4), Deck.createRandomDeck().toMutableDeck(), roundActive = true)
 		game2.attackWithCard(attackerHand2.cards().first())
-		val successFirst = game2.joinAttack(p4, joiner2Hand.cards().first())
-		assertThat(successFirst).isTrue()
+		game2.joinAttack(p4, joiner2Hand.cards().first())
+		
 		Assertions.assertThrows(AttackerCanNotJoinHisAttackException::class.java) {
 			game2.joinAttack(p4, joiner2Hand.cards().first())
 		}
@@ -171,10 +163,10 @@ class GameJoinTest {
 		val game = Game(
 			handsOfPlayers = hands,
 			players = listOf(attacker, defender, joiner),
-			deck = MutableDeck(cards = mutableListOf())
+			deck = MutableDeck(cards = mutableListOf()),
+			roundActive = true
 		)
 		
-		game.startRound()
 		
 		val card = attackerHand.cards().first()
 		

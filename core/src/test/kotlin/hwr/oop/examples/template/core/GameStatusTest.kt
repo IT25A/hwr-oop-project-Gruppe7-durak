@@ -32,7 +32,6 @@ class GameStatusTest {
 		val players = listOf(PlayerId("P1"), PlayerId("P2"), PlayerId("P3"), PlayerId("P4"))
 		val game = Game.create(players)
 		
-		game.startRound()
 		// no joining, no attacks; so P3 and P4 have no role
 		val status = game.getGameStatus()
 		
@@ -79,12 +78,10 @@ class GameStatusTest {
 		val joinerHand = PlayerHand.create(listOf(joinCard), p3)
 		
 		val hands = mapOf(p1 to attackerHand, p2 to defenderHand, p3 to joinerHand)
-		val game = Game(hands, listOf(p1, p2, p3), Deck.createRandomDeck().toMutableDeck())
+		val game = Game(hands, listOf(p1, p2, p3), Deck.createRandomDeck().toMutableDeck(), roundActive = true)
 		
-		game.startRound()
 		game.attackWithCard(attackCard)
-		val joined = game.joinAttack(p3, joinCard)
-		assertThat(joined).isTrue()
+		game.joinAttack(p3, joinCard)
 		
 		val status = game.getGameStatus()
 		// joiner should be marked as ATTACKING
@@ -116,12 +113,10 @@ class GameStatusTest {
 		val joinerHand = PlayerHand.create(listOf(joinCard), p3)
 		
 		val hands = mapOf(p1 to attackerHand, p2 to defenderHand, p3 to joinerHand)
-		val game = Game(hands, listOf(p1, p2, p3), Deck.createRandomDeck().toMutableDeck())
+		val game = Game(hands, listOf(p1, p2, p3), Deck.createRandomDeck().toMutableDeck(), roundActive = true)
 		
-		game.startRound()
 		game.attackWithCard(attackCard)
-		val joined = game.joinAttack(p3, joinCard)
-		assertThat(joined).isTrue()
+		game.joinAttack(p3, joinCard)
 		
 		val status = game.getGameStatus()
 		// verify that P3 line contains (ATTACKING) - extract player lines and check P3 has the role

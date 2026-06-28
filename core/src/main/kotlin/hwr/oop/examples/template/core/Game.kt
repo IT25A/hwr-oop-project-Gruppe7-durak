@@ -12,10 +12,16 @@ class Game(
 	private var currentAttackerIndex: Int = 0,
 	private var currentDefenderIndex: Int = 1,
 	private var roundActive: Boolean = false,
-	private var roundCardPairings: MutableMap<Card, Card?> = mutableMapOf(),
+	private val roundCardPairings: MutableMap<Card, Card?> = mutableMapOf(),
 	private var currentRoundAttackers: MutableList<PlayerId> = mutableListOf(),
 	private var currentBout: Bout? = null,
 ) {
+	init {
+		if (currentBout == null && roundActive) {
+			initRound()
+		}
+	}
+
 	companion object {
 		fun create(playerIds: List<PlayerId>): Game {
 			val playercount = playerIds.size
@@ -33,15 +39,29 @@ class Game(
 				handsOfPlayers[playerId] = playerHand
 			}
 			
-			return Game(
+ 		val game = Game(
 				handsOfPlayers = handsOfPlayers,
 				players = playerIds,
 				deck = deckMutable,
 				currentAttackerIndex = 0,
 				currentDefenderIndex = 1,
-				currentRoundAttackers = mutableListOf(playerIds[0])
+				currentRoundAttackers = mutableListOf(playerIds[0]),
+				roundActive = true
 			)
+			return game
 		}
+	}
+	
+	private fun initRound() {
+		roundCardPairings.clear()
+		currentRoundAttackers.clear()
+		currentRoundAttackers.add(getAttacker())
+
+		val attackerHand = handsOfPlayers[getAttacker()] ?: PlayerHand.create(id = getAttacker())
+		val defenderHand = handsOfPlayers[getDefender()] ?: PlayerHand.create(id = getDefender())
+		currentBout = Bout(attackerHand, defenderHand, trump)
+
+		roundActive = true
 	}
 	
 	fun getAttacker(): PlayerId = players[currentAttackerIndex]
@@ -57,24 +77,9 @@ class Game(
 	fun getRoundCardPairings(): Map<Card, Card?> = roundCardPairings.toMap()
 	
 	
-	fun startRound() {
-		if (roundActive) {
-			throw IllegalStateException("Round already active")
-		}
-		
-		roundCardPairings.clear()
-		currentRoundAttackers.clear()
-		currentRoundAttackers.add(getAttacker())
-		
-		val attackerHand = handsOfPlayers[getAttacker()] ?: PlayerHand.create(id = getAttacker())
-		val defenderHand = handsOfPlayers[getDefender()] ?: PlayerHand.create(id = getDefender())
-		currentBout = Bout(attackerHand, defenderHand, trump)
-		
-		roundActive = true
-	}
 	
 	
-	fun attackWithCard(card: Card): Boolean {
+	fun attackWithCard(card: Card): Game {
 		if (!roundActive) {
 			throw NoActiveRoundException()
 		}
@@ -94,21 +99,19 @@ class Game(
 			throw RankNotOnTableException()
 		}
 		
-		val ok = bout.attack(card)
-		if (ok) {
-			
-			handsOfPlayers = handsOfPlayers.toMutableMap().apply {
-				this[attacker] = bout.attacker
-			}
-			
-			roundCardPairings[card] = null
+		bout.attack(card)
+		
+		handsOfPlayers = handsOfPlayers.toMutableMap().apply {
+			this[attacker] = bout.attacker
 		}
 		
-		return ok
+		roundCardPairings[card] = null
+		
+		return this
 	}
 	
 	
-	fun joinAttack(playerId: PlayerId, card: Card): Boolean {
+	fun joinAttack(playerId: PlayerId, card: Card): Game {
 		if (!roundActive) {
 			throw NoActiveRoundException()
 		}
@@ -149,11 +152,11 @@ class Game(
 		
 		roundCardPairings[card] = null
 		
-		return true
+		return this
 	}
 	
 	
-	fun defendCard(attackingCard: Card, defendingCard: Card): Boolean {
+	fun defendCard(attackingCard: Card, defendingCard: Card): Game {
 		if (!roundActive) {
 			throw NoActiveRoundException()
 		}
@@ -171,17 +174,15 @@ class Game(
 			throw DefenderDoesNotHaveCardException("$defendingCard")
 		}
 		
-		val ok = bout.defend(attackingCard, defendingCard)
-		if (ok) {
-			
-			handsOfPlayers = handsOfPlayers.toMutableMap().apply {
-				this[defender] = bout.defender
-			}
-			
-			roundCardPairings[attackingCard] = defendingCard
+		bout.defend(attackingCard, defendingCard)
+		
+		handsOfPlayers = handsOfPlayers.toMutableMap().apply {
+			this[defender] = bout.defender
 		}
 		
-		return ok
+		roundCardPairings[attackingCard] = defendingCard
+		
+		return this
 	}
 	
 	
@@ -228,12 +229,7 @@ class Game(
 		}
 		replenishHands()
 		
-		roundActive = false
-		roundCardPairings.clear()
-		currentRoundAttackers.clear()
-		currentRoundAttackers.add(players[currentAttackerIndex])
-		currentBout = null
-		
+		initRound()
 	}
 	
 	
