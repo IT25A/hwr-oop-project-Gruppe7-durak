@@ -1,5 +1,8 @@
 package hwr.oop.examples.template.core
 
+import kotlinx.serialization.Serializable
+
+@Serializable
 data class Card(
 	private val suit: Suit,
 	private val rank: Rank,

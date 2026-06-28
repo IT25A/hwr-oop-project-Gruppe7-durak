@@ -1,5 +1,8 @@
 package hwr.oop.examples.template.core
 
+import kotlinx.serialization.Serializable
+
+@Serializable
 data class PlayerHand (
 	private val id: PlayerId,
 	private val cardsInternal: List<Card>,

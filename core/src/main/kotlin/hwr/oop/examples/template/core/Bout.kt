@@ -1,5 +1,8 @@
 package hwr.oop.examples.template.core
 
+import kotlinx.serialization.Serializable
+
+@Serializable
 class Bout(
 	var attacker: PlayerHand,
 	var defender: PlayerHand,

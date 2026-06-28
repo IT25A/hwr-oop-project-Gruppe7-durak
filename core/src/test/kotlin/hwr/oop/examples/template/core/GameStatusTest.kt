@@ -130,4 +130,11 @@ class GameStatusTest {
 		assertThat(p3Line).isNotNull()
 		assertThat(p3Line).contains("(ATTACKING)")
 	}
+	
+	@Test
+	fun `game not found exception contains game id in message`() {
+		val exception = GameNotFoundException("missing-game")
+		
+		assertThat(exception.message).contains("missing-game")
+	}
 }
