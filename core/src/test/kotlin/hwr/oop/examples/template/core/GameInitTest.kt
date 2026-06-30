@@ -54,4 +54,11 @@ class GameInitTest {
 		assertThrows<InvalidPlayerNumberException> { Game.create((1..5).map { PlayerId("P$it") }) }
 		assertThrows<InvalidPlayerNumberException> { Game.create(emptyList()) }
 	}
+	
+	@Test
+	fun `NoActiveBoutException has correct message`() {
+		val exception = NoActiveBoutException()
+		
+		assertThat(exception).hasMessage("No active bout")
+	}
 }

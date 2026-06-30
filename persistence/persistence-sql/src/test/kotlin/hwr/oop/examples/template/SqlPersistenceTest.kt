@@ -6,8 +6,8 @@ import hwr.oop.examples.template.core.Game
 import hwr.oop.examples.template.core.GameNotFoundException
 import hwr.oop.examples.template.core.PlayerId
 import org.assertj.core.api.Assertions.assertThat
-import org.assertj.core.api.Assertions.assertThatThrownBy
 import org.assertj.core.api.Assertions.assertThatCode
+import org.assertj.core.api.Assertions.assertThatThrownBy
 import org.junit.jupiter.api.AfterEach
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Disabled
@@ -81,12 +81,11 @@ class SqlPersistenceTest {
 	}
 	
 	@Test
-	fun `can save and load game after start round`() {
+	fun `can save and load active round game`() {
 		val game = newGame()
-		game.startRound()
 		
-		sut.saveGame("game-start-round", game)
-		val loaded = sut.loadGame("game-start-round")
+		sut.saveGame("game-active-round", game)
+		val loaded = sut.loadGame("game-active-round")
 		
 		assertThat(loaded)
 			.usingRecursiveComparison()
@@ -96,7 +95,6 @@ class SqlPersistenceTest {
 	@Test
 	fun `can save and load game after attack`() {
 		val game = newGame()
-		game.startRound()
 		
 		val attacker = game.getAttacker()
 		val card = game.getPlayerHand(attacker)!!.cards().first()
@@ -113,7 +111,6 @@ class SqlPersistenceTest {
 	@Test
 	fun `can save and load game after end round`() {
 		val game = newGame()
-		game.startRound()
 		
 		val attacker = game.getAttacker()
 		val card = game.getPlayerHand(attacker)!!.cards().first()
@@ -138,16 +135,12 @@ class SqlPersistenceTest {
 	@Test
 	fun `can save and load game after two attacks`() {
 		val game = newGame()
-		game.startRound()
 		
 		val attacker = game.getAttacker()
-		val hand = game.getPlayerHand(attacker)!!
-		val firstCard = hand.cards().first()
+		val firstCard = game.getPlayerHand(attacker)!!.cards().first()
 		game.attackWithCard(firstCard)
 		
-		val secondAttacker = game.getAttacker()
-		val secondHand = game.getPlayerHand(secondAttacker)!!
-		val secondCard = secondHand.cards().first()
+		val secondCard = game.getPlayerHand(attacker)!!.cards().first()
 		game.attackWithCard(secondCard)
 		
 		sut.saveGame("game-two-attacks", game)
@@ -161,7 +154,6 @@ class SqlPersistenceTest {
 	@Test
 	fun `can save and load game after attack and end round`() {
 		val game = newGame()
-		game.startRound()
 		
 		val attacker = game.getAttacker()
 		val card = game.getPlayerHand(attacker)!!.cards().first()
@@ -179,14 +171,12 @@ class SqlPersistenceTest {
 	@Test
 	fun `can save and load game after multiple round transitions`() {
 		val game = newGame()
-		game.startRound()
 		
 		val attacker = game.getAttacker()
-		val card = game.getPlayerHand(attacker)!!.cards().first()
-		game.attackWithCard(card)
+		val firstCard = game.getPlayerHand(attacker)!!.cards().first()
+		game.attackWithCard(firstCard)
 		game.endRound()
 		
-		game.startRound()
 		val nextAttacker = game.getAttacker()
 		val nextCard = game.getPlayerHand(nextAttacker)!!.cards().first()
 		game.attackWithCard(nextCard)
@@ -202,7 +192,6 @@ class SqlPersistenceTest {
 	@Test
 	fun `loading same game twice returns equal state`() {
 		val game = newGame()
-		game.startRound()
 		
 		val attacker = game.getAttacker()
 		val card = game.getPlayerHand(attacker)!!.cards().first()
@@ -221,7 +210,6 @@ class SqlPersistenceTest {
 	@Test
 	fun `saved game can continue after first load`() {
 		val game = newGame()
-		game.startRound()
 		
 		val attacker = game.getAttacker()
 		val card = game.getPlayerHand(attacker)!!.cards().first()
@@ -236,9 +224,8 @@ class SqlPersistenceTest {
 	}
 	
 	@Test
-	fun `loaded game can start next round`() {
+	fun `loaded game can continue next round`() {
 		val game = newGame()
-		game.startRound()
 		
 		val attacker = game.getAttacker()
 		val card = game.getPlayerHand(attacker)!!.cards().first()
@@ -248,15 +235,18 @@ class SqlPersistenceTest {
 		sut.saveGame("start-next-round", game)
 		val loaded = sut.loadGame("start-next-round")
 		
+		assertThat(loaded.isRoundActive()).isTrue()
+		
 		assertThatCode {
-			loaded.startRound()
+			val nextAttacker = loaded.getAttacker()
+			val nextCard = loaded.getPlayerHand(nextAttacker)!!.cards().first()
+			loaded.attackWithCard(nextCard)
 		}.doesNotThrowAnyException()
 	}
 	
 	@Test
 	fun `can save two different games independently`() {
 		val gameOne = newGame()
-		gameOne.startRound()
 		val attackerOne = gameOne.getAttacker()
 		val cardOne = gameOne.getPlayerHand(attackerOne)!!.cards().first()
 		gameOne.attackWithCard(cardOne)

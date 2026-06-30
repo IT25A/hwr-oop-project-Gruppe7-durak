@@ -42,12 +42,11 @@ class FileSystemPersistenceTest {
 	}
 	
 	@Test
-	fun `can save and load game after start round`() {
+	fun `can save and load active round game`() {
 		val game = newGame()
-		game.startRound()
 		
-		sut.saveGame("game-start-round", game)
-		val loaded = sut.loadGame("game-start-round")
+		sut.saveGame("game-active-round", game)
+		val loaded = sut.loadGame("game-active-round")
 		
 		assertThat(loaded)
 			.usingRecursiveComparison()
@@ -57,7 +56,6 @@ class FileSystemPersistenceTest {
 	@Test
 	fun `can save and load game after attack`() {
 		val game = newGame()
-		game.startRound()
 		
 		val attacker = game.getAttacker()
 		val card = game.getPlayerHand(attacker)!!.cards().first()
@@ -77,7 +75,6 @@ class FileSystemPersistenceTest {
 		
 		sut.saveGame("same-id", game)
 		
-		game.startRound()
 		val attacker = game.getAttacker()
 		val card = game.getPlayerHand(attacker)!!.cards().first()
 		game.attackWithCard(card)
@@ -122,7 +119,6 @@ class FileSystemPersistenceTest {
 	@Test
 	fun `can save and load game after end round`() {
 		val game = newGame()
-		game.startRound()
 		
 		val attacker = game.getAttacker()
 		val card = game.getPlayerHand(attacker)!!.cards().first()
@@ -140,7 +136,6 @@ class FileSystemPersistenceTest {
 	@Test
 	fun `loaded game can continue playing after load`() {
 		val game = newGame()
-		game.startRound()
 		
 		val attacker = game.getAttacker()
 		val card = game.getPlayerHand(attacker)!!.cards().first()
@@ -159,7 +154,6 @@ class FileSystemPersistenceTest {
 		val game = newGame()
 		sut.saveGame("overwrite-and-play", game)
 		
-		game.startRound()
 		val attacker = game.getAttacker()
 		val card = game.getPlayerHand(attacker)!!.cards().first()
 		game.attackWithCard(card)
@@ -178,7 +172,6 @@ class FileSystemPersistenceTest {
 	@Test
 	fun `can save and load game twice in a row`() {
 		val game = newGame()
-		game.startRound()
 		
 		val attacker = game.getAttacker()
 		val card = game.getPlayerHand(attacker)!!.cards().first()
@@ -198,7 +191,6 @@ class FileSystemPersistenceTest {
 	@Test
 	fun `loading same game twice returns same state`() {
 		val game = newGame()
-		game.startRound()
 		
 		val attacker = game.getAttacker()
 		val card = game.getPlayerHand(attacker)!!.cards().first()
@@ -217,7 +209,6 @@ class FileSystemPersistenceTest {
 	@Test
 	fun `can overwrite saved file with fresh new game`() {
 		val firstGame = newGame()
-		firstGame.startRound()
 		
 		val attacker = firstGame.getAttacker()
 		val card = firstGame.getPlayerHand(attacker)!!.cards().first()
@@ -236,9 +227,8 @@ class FileSystemPersistenceTest {
 	}
 	
 	@Test
-	fun `loaded ended round game can start next round`() {
+	fun `loaded ended round game can continue with next round`() {
 		val game = newGame()
-		game.startRound()
 		
 		val attacker = game.getAttacker()
 		val card = game.getPlayerHand(attacker)!!.cards().first()
@@ -248,8 +238,12 @@ class FileSystemPersistenceTest {
 		sut.saveGame("next-round-after-load", game)
 		val loaded = sut.loadGame("next-round-after-load")
 		
+		assertThat(loaded.isRoundActive()).isTrue()
+		
 		assertThatCode {
-			loaded.startRound()
+			val nextAttacker = loaded.getAttacker()
+			val nextCard = loaded.getPlayerHand(nextAttacker)!!.cards().first()
+			loaded.attackWithCard(nextCard)
 		}.doesNotThrowAnyException()
 	}
 	
