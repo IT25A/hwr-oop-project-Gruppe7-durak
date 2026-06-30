@@ -27,10 +27,9 @@ class BoutTest {
 		val bout = Bout(attacker, defender, Suit.HEARTS)
 		
 		//when
-		val success = bout.attack(attackCard)
+		bout.attack(attackCard)
 		
 		//then
-		assertThat(success).isTrue
 		assertThat(bout.getAttackStack().cards()).containsExactly(attackCard)
 	}
 	
@@ -46,7 +45,7 @@ class BoutTest {
 		val card = Card(Suit.HEARTS, Rank.EIGHT)
 		
 		//then
-		org.junit.jupiter.api.Assertions.assertThrows(AttackerDoesNotHaveCardException::class.java) { bout.attack(card) }
+		assertThrows(AttackerDoesNotHaveCardException::class.java) { bout.attack(card) }
 	}
 	
 	@Test
@@ -62,7 +61,7 @@ class BoutTest {
 		val cardNotInStack = Card(Suit.HEARTS, Rank.NINE)
 		
 		//then
-		org.junit.jupiter.api.Assertions.assertThrows(AttackStackDoesNotContainCardException::class.java) {
+		assertThrows(AttackStackDoesNotContainCardException::class.java) {
 			bout.defend(cardNotInStack, card)
 		}
 	}
@@ -92,7 +91,7 @@ class BoutTest {
 		val card = Card(Suit.HEARTS, Rank.EIGHT)
 		bout.attack(attackCard)
 		//then
-		org.junit.jupiter.api.Assertions.assertThrows(DefenderDoesNotHaveCardException::class.java) {
+		assertThrows(DefenderDoesNotHaveCardException::class.java) {
 			bout.defend(attackCard, card)
 		}
 	}
@@ -108,10 +107,9 @@ class BoutTest {
 		
 		//when
 		bout.attack(attackCard)
-		val success = bout.defend(attackCard, defendCard)
+		bout.defend(attackCard, defendCard)
 		
 		//then
-		assertThat(success).isTrue
 		assertThat(bout.getDefendStack().cards()).containsExactly(defendCard)
 	}
 	
@@ -126,10 +124,9 @@ class BoutTest {
 		
 		//when
 		bout.attack(attackCard)
-		val success = bout.defend(attackCard, defendCard)
+		bout.defend(attackCard, defendCard)
 		
 		//then
-		assertThat(success).isTrue
 		assertThat(bout.isFullyDefended()).isTrue
 	}
 	
@@ -144,10 +141,11 @@ class BoutTest {
 		
 		//when
 		bout.attack(attackCard)
-		val success = bout.defend(attackCard, defendCard)
 		
 		//then
-		assertThat(success).isFalse
+		assertThrows(CardDoesNotBeatAttackingCardException::class.java) {
+			bout.defend(attackCard, defendCard)
+		}
 	}
 	
 	@Test
@@ -186,13 +184,13 @@ class BoutTest {
 		val bout = Bout(attacker, defender, Suit.HEARTS)
 		
 		// when: first attack is defended -> pairings gets filled
-		assertThat(bout.attack(cardA1)).isTrue()
-		assertThat(bout.defend(cardA1, defendCard)).isTrue()
+		bout.attack(cardA1)
+		bout.defend(cardA1, defendCard)
 		// ensure pairings is non-empty now
 		assertThat(bout.pairings()).isNotEmpty()
 		
 		// then: attacker plays a second attack that is NOT defended
-		assertThat(bout.attack(cardA2)).isTrue()
+		bout.attack(cardA2)
 		
 		// now resolve: not fully defended -> attacker wins -> resolve() calls reset()
 		val result = bout.resolve()
@@ -279,8 +277,8 @@ class BoutTest {
 		val bout = Bout(attacker, defender, Suit.CLUBS)
 		
 		// when: Angriff und erfolgreiche Verteidigung
-		assertThat(bout.attack(attackingCard)).isTrue()
-		assertThat(bout.defend(attackingCard, defendingCard)).isTrue()
+		bout.attack(attackingCard)
+		bout.defend(attackingCard, defendingCard)
 		assertThat(bout.defendStackCards()).containsExactly(defendingCard)
 		
 		// resolve -> tableCards should be non-empty (sichert Tisch-Karten)
@@ -339,7 +337,7 @@ class BoutTest {
 	}
 	
 	@Test
-	fun `Two equal cards return false`() {
+	fun `Two equal cards throw exception`() {
 		
 		//given
 		val attackCard = Card(Suit.SPADES, Rank.KING)
@@ -350,14 +348,15 @@ class BoutTest {
 		
 		//when
 		bout.attack(attackCard)
-		val success = bout.defend(attackCard, defendCard)
 		
 		//then
-		assertThat(success).isFalse
+		assertThrows(CardDoesNotBeatAttackingCardException::class.java) {
+			bout.defend(attackCard, defendCard)
+		}
 	}
 	
 	@Test
-	fun `Defender can not defend with lower rank`() {
+	fun `Defender can not defend with lower rank throws exception`() {
 		
 		//given
 		val attackCard = Card(Suit.SPADES, Rank.KING)
@@ -368,10 +367,11 @@ class BoutTest {
 		
 		//when
 		bout.attack(attackCard)
-		val success = bout.defend(attackCard, defendCard)
 		
 		//then
-		assertThat(success).isFalse
+		assertThrows(CardDoesNotBeatAttackingCardException::class.java) {
+			bout.defend(attackCard, defendCard)
+		}
 	}
 	
 	@Test
@@ -386,12 +386,11 @@ class BoutTest {
 		
 		// when: attacker plays and defender defends once
 		bout.attack(attackCard)
-		assertThat(bout.defend(attackCard, defendCard1)).isTrue()
+		bout.defend(attackCard, defendCard1)
 		
 		// then: attempting to defend the same attacking card again should throw
 		assertThrows(PairingCardWasAlreadyBeenDefendedException::class.java) {
 			bout.defend(attackCard, defendCard2)
 		}
 	}
-	
 }

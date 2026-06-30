@@ -1,8 +1,13 @@
 package hwr.oop.examples.template.core
 
+import kotlinx.serialization.Serializable
 
-class AttackStack(vararg initialCards: Card) {
-	private val cards: MutableList<Card> = initialCards.toMutableList()
+@Serializable
+
+class AttackStack(
+	private val cards: MutableList<Card> = mutableListOf()
+) {
+	constructor(vararg initialCards: Card) : this(initialCards.toMutableList())
 	
 	fun add(card: Card) {
 		cards.add(card)

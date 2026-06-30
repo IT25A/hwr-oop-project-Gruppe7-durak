@@ -1,5 +1,6 @@
 package hwr.oop.examples.template.service
 
+import hwr.oop.examples.template.core.GameNotFoundException
 import hwr.oop.examples.template.service.model.ErrorResponse
 import org.springframework.http.HttpStatus
 import org.springframework.http.ResponseEntity
@@ -22,6 +23,13 @@ class ControllerAdvice {
 		)
 		return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
 			.body(errorResponse)
+	}
+	
+	@ExceptionHandler(GameNotFoundException::class)
+	fun handleGameNotFoundException(ex: GameNotFoundException): ResponseEntity<String> {
+		return ResponseEntity
+			.status(HttpStatus.NOT_FOUND)
+			.body(ex.message)
 	}
 	
 }

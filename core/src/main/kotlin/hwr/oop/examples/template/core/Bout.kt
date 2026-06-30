@@ -1,5 +1,8 @@
 package hwr.oop.examples.template.core
 
+import kotlinx.serialization.Serializable
+
+@Serializable
 class Bout(
 	var attacker: PlayerHand,
 	var defender: PlayerHand,
@@ -19,35 +22,34 @@ class Bout(
 	fun defendStackCards(): List<Card> = defendStack.cards().toList()
 	
 	
-	fun attack(card: Card): Boolean {
-		if (!attacker.contains(card)) throw AttackerDoesNotHaveCardException("Attacker does not have the card: $card")
+	fun attack(card: Card): Bout {
+		if (!attacker.contains(card)) throw AttackerDoesNotHaveCardException("$card")
 		attacker = attacker.without(card)
 		attackStack.add(card)
 		pairings[card] = null
-		return true
+		return this
 	}
-	
 	
 	fun addAttackFromOther(card: Card) {
 		attackStack.add(card)
 		pairings[card] = null
 	}
 	
-	fun defend(attackingCard: Card, defendingCard: Card): Boolean {
+	fun defend(attackingCard: Card, defendingCard: Card): Bout {
 		if (!attackStack.cards()
 				.contains(attackingCard)
-		) throw AttackStackDoesNotContainCardException("Attack stack does not contain the attacking card: $attackingCard")
-		if (!defender.contains(defendingCard)) throw DefenderDoesNotHaveCardException("Defender does not have the card: $defendingCard")
-		if (pairings[attackingCard] != null) throw PairingCardWasAlreadyBeenDefendedException("The attacking card has already been defended: $attackingCard")
+		) throw AttackStackDoesNotContainCardException("$attackingCard")
+		if (!defender.contains(defendingCard)) throw DefenderDoesNotHaveCardException("$attackingCard")
+		if (pairings[attackingCard] != null) throw PairingCardWasAlreadyBeenDefendedException("$attackingCard")
 		
 		val defendingWins = cardBeats(attackingCard, defendingCard)
 		if (defendingWins) {
 			defender = defender.without(defendingCard)
 			defendStack.add(defendingCard)
 			pairings[attackingCard] = defendingCard
-			return true
+			return this
 		}
-		return false
+		throw CardDoesNotBeatAttackingCardException("$attackingCard", "$defendingCard")
 	}
 	
 	
@@ -58,32 +60,26 @@ class Bout(
 		return ranks
 	}
 	
-	
 	fun cardBeats(attacking: Card, defending: Card): Boolean {
 		val attackRank = attacking.rank()
 		val defendRank = defending.rank()
 		val attackValue = attacking.getCardValue(attackRank)
 		val defendValue = defending.getCardValue(defendRank)
 		
-		
 		if (attacking.suit() == defending.suit()) {
 			return defendValue > attackValue
 		}
-		
 		
 		if (defending.suit() == trump && attacking.suit() != trump) {
 			return true
 		}
 		
-		
 		return false
 	}
-	
 	
 	fun isFullyDefended(): Boolean {
 		return attackStack.cards().all { pairings[it] != null }
 	}
-	
 	
 	fun resolve(): BoutResult {
 		if (isFullyDefended()) {
@@ -106,41 +102,33 @@ class Bout(
 		}
 	}
 	
-	
 	private fun reset() {
 		attackStack.clear()
 		defendStack.clear()
 		pairings.clear()
 	}
 	
-	
 	fun promoteDefendToAttack() {
 		
 		val finishedAttacks = attackStack.cards()
 		
-		
 		finishedAttacks.forEach { pairings.remove(it) }
-		
 		
 		attackStack.clear()
 		
 		val promoted = defendStack.cards()
 		promoted.forEach { attackStack.add(it) }
 		
-		
 		promoted.forEach { pairings[it] = null }
-		
 		
 		defendStack.clear()
 		
 	}
 	
-	
 	fun finalizeRound(discard: DiscardPile) {
 		val toDiscard = mutableListOf<Card>()
 		
 		toDiscard.addAll(tablePile)
-		
 		
 		toDiscard.addAll(attackStack.cards().filter { card -> !toDiscard.contains(card) })
 		toDiscard.addAll(defendStack.cards().filter { card -> !toDiscard.contains(card) })
@@ -150,10 +138,3 @@ class Bout(
 		reset()
 	}
 }
-
-
-data class BoutResult(
-	val defenderWon: Boolean,
-	val tableCards: List<Card>,
-	val winner: PlayerHand,
-)

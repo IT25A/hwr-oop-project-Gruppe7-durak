@@ -1,5 +1,8 @@
 package hwr.oop.examples.template.core
 
+import kotlinx.serialization.Serializable
+
+@Serializable
 class DiscardPile {
 	private val cards: MutableList<Card> = mutableListOf()
 	

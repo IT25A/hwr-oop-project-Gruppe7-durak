@@ -89,4 +89,24 @@ class DeckTest {
 		// but the probability is extremely low (1 in 36! ≈ 1 in 3.72 × 10^49)
 		assertThat(cards1).isNotEqualTo(cards2)
 	}
+	
+	@Test
+	fun `deck empty checks and replenish behavior`() {
+		val game = Game.create(listOf(PlayerId("P1"), PlayerId("P2")))
+		assertThat(game.isDeckEmpty()).isFalse()
+		
+		val emptyGame = Game(
+			handsOfPlayers = mapOf(
+				PlayerId("P1") to PlayerHand.create(id = PlayerId("P1")),
+				PlayerId("P2") to PlayerHand.create(id = PlayerId("P2"))
+			),
+			players = listOf(PlayerId("P1"), PlayerId("P2")),
+			deck = MutableDeck(mutableListOf())
+		)
+		assertThat(emptyGame.isDeckEmpty()).isTrue()
+		
+		game.replenishHands()
+		game.replenishHands()
+		assertThat(game.getPlayerHand(game.getAttacker())?.cards()?.size).isLessThanOrEqualTo(6)
+	}
 }
