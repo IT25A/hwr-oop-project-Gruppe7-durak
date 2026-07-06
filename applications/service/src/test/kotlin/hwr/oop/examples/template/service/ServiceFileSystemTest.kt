@@ -2,6 +2,7 @@ package hwr.oop.examples.template.service
 
 import hwr.oop.examples.template.FileSystemPersistence
 import hwr.oop.examples.template.FileSystemPersistenceConfiguration
+import hwr.oop.examples.template.core.GamePersistence
 import okio.Path.Companion.toPath
 import okio.fakefilesystem.FakeFileSystem
 import org.junit.jupiter.api.BeforeEach
@@ -23,14 +24,14 @@ class ServiceFileSystemTest {
 	class Config {
 		private val fakeFileSystem = FakeFileSystem()
 		private val tempDir = "/tmp/service-fs-test".toPath()
-		private val persistence: FileSystemPersistence = FileSystemPersistence(
+		private val gamePersistence: FileSystemPersistence = FileSystemPersistence(
 			FileSystemPersistenceConfiguration(tempDir),
 			fakeFileSystem.also { it.createDirectories(tempDir) }
 		)
 		
 		@Bean
 		@Primary
-		fun persistence(): Any = persistence
+		fun testPersistence(): GamePersistence = gamePersistence
 	}
 	
 	@Autowired

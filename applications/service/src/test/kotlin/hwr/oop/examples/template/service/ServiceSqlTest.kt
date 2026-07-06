@@ -3,6 +3,7 @@ package hwr.oop.examples.template.service
 import com.zaxxer.hikari.HikariConfig
 import com.zaxxer.hikari.HikariDataSource
 import hwr.oop.examples.template.SqlPersistence
+import hwr.oop.examples.template.core.GamePersistence
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Disabled
 import org.junit.jupiter.api.Test
@@ -32,7 +33,7 @@ class ServiceSqlTest {
 	
 	@TestConfiguration
 	class Config {
-		private val persistence = SqlPersistence(
+		private val gamePersistence = SqlPersistence(
 			HikariDataSource(HikariConfig().apply {
 				jdbcUrl = postgres.jdbcUrl
 				username = postgres.username
@@ -42,7 +43,7 @@ class ServiceSqlTest {
 		
 		@Bean
 		@Primary
-		fun persistence(): Any = persistence
+		fun testPersistence(): GamePersistence = gamePersistence
 	}
 	
 	@Autowired
@@ -63,4 +64,3 @@ class ServiceSqlTest {
 	}
 	
 }
-

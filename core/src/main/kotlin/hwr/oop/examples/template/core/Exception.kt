@@ -1,40 +1,47 @@
 package hwr.oop.examples.template.core
 
-class DefenderDoesNotHaveCardException(attackingCard: String) :
-	Exception("Defender does not have the card: $attackingCard") {}
+open class GameRuleException(message: String) : RuntimeException(message)
 
-class AttackerDoesNotHaveCardException(card: String) : Exception("Attacker does not have the card: $card") {}
+class DefenderDoesNotHaveCardException(attackingCard: String) :
+	GameRuleException("Defender does not have the card: $attackingCard") {}
+
+class AttackerDoesNotHaveCardException(card: String) : GameRuleException("Attacker does not have the card: $card") {}
 
 class AttackStackDoesNotContainCardException(attackingCard: String) :
-	Exception("Attack stack does not contain the attacking card: $attackingCard") {}
+	GameRuleException("Attack stack does not contain the attacking card: $attackingCard") {}
 
 class PairingCardWasAlreadyBeenDefendedException(attackingCard: String) :
-	Exception("The attacking card has already been defended: $attackingCard") {}
+	GameRuleException("The attacking card has already been defended: $attackingCard") {}
 
 class InvalidPlayerNumberException(playerCount: String) :
-	Exception("Player count must be between 2 and 4, but was $playerCount") {}
+	GameRuleException("Player count must be between 2 and 6, but was $playerCount") {}
 
-class AttackerNotFoundException() : Exception("Attacker not found") {}
+class AttackerNotFoundException() : GameRuleException("Attacker not found") {}
 
-class NoActiveBoutException() : Exception("No active bout") {}
+class NoActiveBoutException() : GameRuleException("No active bout") {}
 
-class NoActiveRoundException() : Exception("No active round") {}
+class NoActiveRoundException() : GameRuleException("No active round") {}
 
-class RankNotOnTableException() : Exception("Card rank does not match any rank on the table") {}
+class RankNotOnTableException() : GameRuleException("Card rank does not match any rank on the table") {}
 
-class AttackerAndDefenderCanNotJoinAttackException() : Exception("Attacker and defender cannot join the attack") {}
+class AttackerAndDefenderCanNotJoinAttackException() : GameRuleException("Attacker and defender cannot join the attack") {}
 
-class AttackerCanNotJoinHisAttackException() : Exception("Player already joined the attack") {}
+class AttackerCanNotJoinHisAttackException() : GameRuleException("Player already joined the attack") {}
 
-class JoinerNotFoundException() : Exception("Player not found") {}
+class JoinerNotFoundException() : GameRuleException("Player not found") {}
 
-class DefenderNotFoundException() : Exception("Defender not found") {}
+class DefenderNotFoundException() : GameRuleException("Defender not found") {}
 
-class JoinerDoesNotHaveCardException() : Exception("Joiner doesn't have the card") {}
+class JoinerDoesNotHaveCardException() : GameRuleException("Joiner doesn't have the card") {}
 
-class DefenderDoesNotHaveEnoughCardsException() : Exception("Defender does not have enough cards") {}
+class DefenderDoesNotHaveEnoughCardsException() : GameRuleException("Defender does not have enough cards") {}
+
+class DefenderCanNotPassException() : GameRuleException("Defender cannot pass on supplying") {}
+
+class PlayerAlreadyPassedSupplyException(playerId: String) :
+	GameRuleException("Player already passed on supplying: $playerId") {}
 
 class CardDoesNotBeatAttackingCardException(attackingCard: String, defendingCard: String) :
-	Exception("Defending card $defendingCard does not beat attacking card $attackingCard")
+	GameRuleException("Defending card $defendingCard does not beat attacking card $attackingCard")
 
 class GameNotFoundException(gameID: String) : Exception("Game with ID $gameID not found") {}

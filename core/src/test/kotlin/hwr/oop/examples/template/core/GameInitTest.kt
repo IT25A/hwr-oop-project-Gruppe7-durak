@@ -47,11 +47,21 @@ class GameInitTest {
 		assertThat(game.getDefender()).isEqualTo(p2)
 		assertThat(game.getCurrentRoundAttackers()).contains(p1)
 	}
+
+	@Test
+	fun `create with 6 players is allowed`() {
+		val players = (1..6).map { PlayerId("P$it") }
+		val game = Game.create(players)
+
+		assertThat(game.getPlayers()).containsExactlyElementsOf(players)
+		assertThat(game.getDeckCards()).isEmpty()
+		assertThat(game.getPlayerHand(players.first())?.cards()).hasSize(6)
+	}
 	
 	@Test
 	fun `create with invalid player numbers throws`() {
 		assertThrows<InvalidPlayerNumberException> { Game.create(listOf(PlayerId("P1"))) }
-		assertThrows<InvalidPlayerNumberException> { Game.create((1..5).map { PlayerId("P$it") }) }
+		assertThrows<InvalidPlayerNumberException> { Game.create((1..7).map { PlayerId("P$it") }) }
 		assertThrows<InvalidPlayerNumberException> { Game.create(emptyList()) }
 	}
 	

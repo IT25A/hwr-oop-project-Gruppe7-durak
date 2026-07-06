@@ -13,6 +13,7 @@ class Game(
 	private var currentDefenderIndex: Int = 1,
 	private var roundActive: Boolean = false,
 	private val roundCardPairings: MutableMap<Card, Card?> = mutableMapOf(),
+	private val supplyPasses: MutableSet<PlayerId> = mutableSetOf(),
 	private var currentRoundAttackers: MutableList<PlayerId> = mutableListOf(),
 	private var currentBout: Bout? = null,
 ) {
@@ -25,7 +26,7 @@ class Game(
 	companion object {
 		fun create(playerIds: List<PlayerId>): Game {
 			val playercount = playerIds.size
-			if (playercount !in 2..4) {
+			if (playercount !in 2..6) {
 				throw InvalidPlayerNumberException("$playercount")
 			}
 			
@@ -54,6 +55,7 @@ class Game(
 	
 	private fun initRound() {
 		roundCardPairings.clear()
+		supplyPasses.clear()
 		currentRoundAttackers.clear()
 		currentRoundAttackers.add(getAttacker())
 
@@ -67,6 +69,8 @@ class Game(
 	fun getAttacker(): PlayerId = players[currentAttackerIndex]
 	
 	fun getDefender(): PlayerId = players[currentDefenderIndex]
+
+	fun getPlayers(): List<PlayerId> = players.toList()
 	
 	fun getPlayerHand(playerId: PlayerId): PlayerHand? = handsOfPlayers[playerId]
 	
@@ -75,6 +79,12 @@ class Game(
 	fun getCurrentRoundAttackers(): List<PlayerId> = currentRoundAttackers.toList()
 	
 	fun getRoundCardPairings(): Map<Card, Card?> = roundCardPairings.toMap()
+
+	fun getSupplyPasses(): List<PlayerId> = supplyPasses.toList()
+
+	fun getDeckCards(): List<Card> = deck.cards.toList()
+
+	fun getTrumpSuit(): Suit = trump
 	
 	
 	
@@ -106,6 +116,7 @@ class Game(
 		}
 		
 		roundCardPairings[card] = null
+		supplyPasses.clear()
 		
 		return this
 	}
@@ -151,6 +162,7 @@ class Game(
 		
 		
 		roundCardPairings[card] = null
+		supplyPasses.clear()
 		
 		return this
 	}
@@ -181,6 +193,38 @@ class Game(
 		}
 		
 		roundCardPairings[attackingCard] = defendingCard
+		
+		return this
+	}
+
+	fun supplyCard(playerId: PlayerId, card: Card): Game {
+		if (playerId == getAttacker()) {
+			return attackWithCard(card)
+		}
+		return joinAttack(playerId, card)
+	}
+
+	fun passSupply(playerId: PlayerId): Game {
+		if (!roundActive) {
+			throw NoActiveRoundException()
+		}
+		
+		if (playerId == getDefender()) {
+			throw DefenderCanNotPassException()
+		}
+		
+		if (!players.contains(playerId)) {
+			throw JoinerNotFoundException()
+		}
+		
+		if (!supplyPasses.add(playerId)) {
+			throw PlayerAlreadyPassedSupplyException(playerId.asString())
+		}
+		
+		val nonDefendingPlayers = players.filterNot { it == getDefender() }
+		if (nonDefendingPlayers.all { it in supplyPasses }) {
+			endRound()
+		}
 		
 		return this
 	}
