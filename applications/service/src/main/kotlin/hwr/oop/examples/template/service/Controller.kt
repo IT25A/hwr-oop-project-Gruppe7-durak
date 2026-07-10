@@ -47,7 +47,7 @@ class Controller(
 		val id = requireNotNull(gameId) { "gameId is required" }
 		val request = requireNotNull(attackRequest) { "attackRequest is required" }
 		val game = gamePersistence.loadGame(id)
-		game.supplyCard(PlayerId(request.playerId), request.card.toCoreCard())
+		game.attackWithCard(request.card.toCoreCard())
 		gamePersistence.saveGame(id, game)
 		return ResponseEntity.ok(game.toApiGameState(id))
 	}
