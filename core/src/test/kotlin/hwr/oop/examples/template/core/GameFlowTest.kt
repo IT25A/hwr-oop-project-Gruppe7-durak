@@ -22,12 +22,14 @@ class GameFlowTest {
 		val attackCard = game.getPlayerHand(game.getAttacker())?.cards()?.first() ?: return
 		game.attackWithCard(attackCard)
 		
+		val trumpSuit = game.getTrumpSuit()
 		val defenderHand = game.getPlayerHand(game.getDefender())
+		
 		val defendCard = defenderHand?.cards()?.find { def ->
 			if (def.suit() == attackCard.suit()) {
 				def.getCardValue(def.rank()) > attackCard.getCardValue(attackCard.rank())
 			} else {
-				def.suit() == Suit.HEARTS
+				def.suit() == trumpSuit
 			}
 		}
 		
