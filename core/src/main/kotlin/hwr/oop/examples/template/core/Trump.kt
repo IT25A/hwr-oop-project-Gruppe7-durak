@@ -1,5 +1,8 @@
 package hwr.oop.examples.template.core
 
+import kotlinx.serialization.Serializable
+
+@Serializable
 class Trump private constructor(
 	private val suit: Suit,
 ) {
@@ -11,6 +14,8 @@ class Trump private constructor(
 			deck.cards.add(trumpCard)
 			return Pair(deck, Trump(trumpCard.suit()))
 		}
+		
+		fun of(suit: Suit): Trump = Trump(suit)
 	}
 }
 

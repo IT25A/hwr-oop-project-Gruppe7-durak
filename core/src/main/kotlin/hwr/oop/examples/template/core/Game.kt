@@ -8,7 +8,7 @@ class Game(
 	private val players: List<PlayerId>,
 	private var deck: MutableDeck,
 	private val discard: DiscardPile = DiscardPile(),
-	private val trump: Suit = Suit.HEARTS,
+	private val trump: Trump = Trump.of(Suit.HEARTS),
 	private var currentAttackerIndex: Int = 0,
 	private var currentDefenderIndex: Int = 1,
 	private var roundActive: Boolean = false,
@@ -31,6 +31,8 @@ class Game(
 			}
 			
 			val deckMutable = Deck.createRandomDeck().toMutableDeck()
+			val (_, trump) = Trump.drawFromDeck(deckMutable)
+			
 			val handsOfPlayers = mutableMapOf<PlayerId, PlayerHand>()
 			
 			
@@ -44,6 +46,7 @@ class Game(
 				handsOfPlayers = handsOfPlayers,
 				players = playerIds,
 				deck = deckMutable,
+			  trump = trump,
 				currentAttackerIndex = 0,
 				currentDefenderIndex = 1,
 				currentRoundAttackers = mutableListOf(playerIds[0]),
@@ -61,7 +64,7 @@ class Game(
 
 		val attackerHand = handsOfPlayers[getAttacker()] ?: PlayerHand.create(id = getAttacker())
 		val defenderHand = handsOfPlayers[getDefender()] ?: PlayerHand.create(id = getDefender())
-		currentBout = Bout(attackerHand, defenderHand, trump)
+		currentBout = Bout(attackerHand, defenderHand, trump.suit())
 
 		roundActive = true
 	}
@@ -84,7 +87,7 @@ class Game(
 
 	fun getDeckCards(): List<Card> = deck.cards.toList()
 
-	fun getTrumpSuit(): Suit = trump
+	fun getTrumpSuit(): Suit = trump.suit()
 	
 	fun attackWithCard(card: Card): Game {
 		if (!roundActive) {
@@ -315,7 +318,7 @@ class Game(
 	fun getGameStatus(): String {
 		return """
 			|=== DURAK GAME STATUS ===
-			|Trump Suit: $trump
+			|Trump Suit: ${trump.suit()}
 			|Current Attacker: ${getAttacker()}
 			|Current Defender: ${getDefender()}
 			|Round Active: $roundActive

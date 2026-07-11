@@ -15,7 +15,7 @@ class GameSupplyPassTest {
 		val game = Game.create(listOf(p1, p2, p3))
 
 		assertThat(game.getPlayers()).containsExactly(p1, p2, p3)
-		assertThat(game.getTrumpSuit()).isEqualTo(Suit.HEARTS)
+		assertThat(game.getTrumpSuit()).isIn(Suit.values().toList())
 		assertThat(game.getSupplyPasses()).isEmpty()
 		assertThat(game.getDeckCards()).hasSize(18)
 		assertThat(p1.asString()).isEqualTo("P1")
