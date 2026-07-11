@@ -86,9 +86,6 @@ class Game(
 
 	fun getTrumpSuit(): Suit = trump
 	
-	
-	
-	
 	fun attackWithCard(card: Card): Game {
 		if (!roundActive) {
 			throw NoActiveRoundException()
@@ -318,6 +315,7 @@ class Game(
 	fun getGameStatus(): String {
 		return """
 			|=== DURAK GAME STATUS ===
+			|Trump Suit: $trump
 			|Current Attacker: ${getAttacker()}
 			|Current Defender: ${getDefender()}
 			|Round Active: $roundActive

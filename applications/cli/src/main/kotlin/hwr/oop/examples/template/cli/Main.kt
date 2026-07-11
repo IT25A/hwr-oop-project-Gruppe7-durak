@@ -24,6 +24,7 @@ fun main(args: Array<String>) {
 			StartGameCommand(persistence),
 			OnGameIdCommand().subcommands(
 				GetGameCommand(persistence),
+				GetPlayerHandCommand(persistence),
 				AttackCommand(persistence),
 				DefendCommand(persistence),
 				SupplyCommand(persistence),
