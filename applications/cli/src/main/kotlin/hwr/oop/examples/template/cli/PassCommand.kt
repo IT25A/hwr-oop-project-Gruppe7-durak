@@ -4,13 +4,23 @@ import com.github.ajalt.clikt.core.CliktCommand
 import com.github.ajalt.clikt.core.requireObject
 import com.github.ajalt.clikt.parameters.options.option
 import com.github.ajalt.clikt.parameters.options.required
+import hwr.oop.examples.template.core.GamePersistence
+import hwr.oop.examples.template.core.PlayerId
 
-class PassCommand : CliktCommand(name = "pass") {
+class PassCommand(
+	private val persistence: GamePersistence? = null,
+) : CliktCommand(name = "pass") {
 	private val gameId by requireObject<String>()
 	private val playerId by option(
 		"--player-id",
 		help = "The ID of the non-defending player who passes on supplying."
 	).required()
 	
-	override fun run(): Unit = TODO()
+	override fun run() {
+		val gamePersistence = requireNotNull(persistence) { "Persistence is not configured" }
+		val game = gamePersistence.loadGame(gameId)
+		game.passSupply(PlayerId(playerId))
+		gamePersistence.saveGame(gameId, game)
+		game.printState()
+	}
 }

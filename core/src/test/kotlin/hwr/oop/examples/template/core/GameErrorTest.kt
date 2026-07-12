@@ -34,6 +34,15 @@ class GameErrorTest {
 		val ex = assertThrows<AttackerNotFoundException> { game.attackWithCard(spade6) }
 		assertThat(ex.message).isEqualTo("Attacker not found")
 	}
+
+	@Test
+	fun `attackWithCard throws NoActiveBoutException when bout is missing`() {
+		val hands = mapOf(attacker to PlayerHand.create(listOf(spade6), attacker))
+		val game = Game(hands, listOf(attacker, defender), MutableDeck(mutableListOf()), roundActive = true)
+		game.setPrivateField("currentBout", null)
+
+		assertThrows<NoActiveBoutException> { game.attackWithCard(spade6) }
+	}
 	
 	@Test
 	fun `defendCard throws DefenderNotFoundException when defender is missing`() {
@@ -42,6 +51,15 @@ class GameErrorTest {
 		
 		val ex = assertThrows<DefenderNotFoundException> { game.defendCard(spade6, heart7) }
 		assertThat(ex.message).isEqualTo("Defender not found")
+	}
+
+	@Test
+	fun `defendCard throws NoActiveBoutException when bout is missing`() {
+		val hands = mapOf(attacker to PlayerHand.create(listOf(spade6), attacker), defender to PlayerHand.create(listOf(heart7), defender))
+		val game = Game(hands, listOf(attacker, defender), MutableDeck(mutableListOf()), roundActive = true)
+		game.setPrivateField("currentBout", null)
+
+		assertThrows<NoActiveBoutException> { game.defendCard(spade6, heart7) }
 	}
 	
 	@Test
@@ -97,24 +115,77 @@ class GameErrorTest {
 	}
 
 	@Test
-	fun `attackWithCard throws NoActiveBoutException when round is active but bout is missing`() {
-		val hands = mapOf(p1 to PlayerHand.create(listOf(spade6), p1))
-		// Use manual creation and set currentBout to null. 
-		// Since we have the init block, we must ensure it doesn't re-initialize.
-		// The init block only runs if currentBout is null AND roundActive is true.
-		// If we pass currentBout as null in the constructor, the init block WILL run.
-		// Wait, if I want it to be null, I can't easily do it if roundActive is true because of my init block.
-		
-		// Let's rethink: the only way to have roundActive true and currentBout null is if someone bypasses the logic
-		// or if we specifically test this state.
+	fun `joinAttack throws attacker and defender cannot join attack`() {
+		val joiner = PlayerId("Joiner")
+		val hands = mapOf(
+			attacker to PlayerHand.create(listOf(spade6), attacker),
+			defender to PlayerHand.create(listOf(heart7), defender),
+			joiner to PlayerHand.create(listOf(club6), joiner),
+		)
+		val game = Game(hands, listOf(attacker, defender, joiner), MutableDeck(mutableListOf()), roundActive = true)
+		game.attackWithCard(spade6)
+
+		assertThrows<AttackerAndDefenderCanNotJoinAttackException> { game.joinAttack(attacker, spade6) }
+		assertThrows<AttackerAndDefenderCanNotJoinAttackException> { game.joinAttack(defender, club6) }
 	}
-	
+
 	@Test
-	fun `joinAttack throws NoActiveBoutException when round is active but bout is missing`() {}
-	
+	fun `joinAttack throws when player already joined or is missing`() {
+		val joiner = PlayerId("Joiner")
+		val hands = mapOf(
+			attacker to PlayerHand.create(listOf(spade6), attacker),
+			defender to PlayerHand.create(listOf(heart7), defender),
+			joiner to PlayerHand.create(listOf(club6), joiner),
+		)
+		val game = Game(hands, listOf(attacker, defender, joiner), MutableDeck(mutableListOf()), roundActive = true)
+		game.attackWithCard(spade6)
+		game.joinAttack(joiner, club6)
+
+		assertThrows<AttackerCanNotJoinHisAttackException> { game.joinAttack(joiner, club6) }
+		assertThrows<JoinerNotFoundException> { game.joinAttack(PlayerId("Missing"), club6) }
+	}
+
 	@Test
-	fun `defendCard throws NoActiveBoutException when round is active but bout is missing`() {}
-	
+	fun `joinAttack throws when player has no card or bout missing`() {
+		val joiner = PlayerId("Joiner")
+		val hands = mapOf(
+			attacker to PlayerHand.create(listOf(spade6), attacker),
+			defender to PlayerHand.create(listOf(heart7), defender),
+			joiner to PlayerHand.create(listOf(club6), joiner),
+		)
+		val game = Game(hands, listOf(attacker, defender, joiner), MutableDeck(mutableListOf()), roundActive = true)
+		game.attackWithCard(spade6)
+
+		val missingBoutGame = Game(hands, listOf(attacker, defender, joiner), MutableDeck(mutableListOf()), roundActive = true)
+		missingBoutGame.setPrivateField("currentBout", null)
+		assertThrows<NoActiveBoutException> { missingBoutGame.joinAttack(joiner, club6) }
+
+		val emptyHandGame = Game(
+			mapOf(
+				attacker to PlayerHand.create(listOf(spade6), attacker),
+				defender to PlayerHand.create(listOf(heart7), defender),
+				joiner to PlayerHand.create(emptyList(), joiner),
+			),
+			listOf(attacker, defender, joiner),
+			MutableDeck(mutableListOf()),
+			roundActive = true
+		)
+		emptyHandGame.attackWithCard(spade6)
+		assertThrows<JoinerDoesNotHaveCardException> { emptyHandGame.joinAttack(joiner, club6) }
+	}
+
 	@Test
-	fun `endRound throws NoActiveBoutException when round is active but bout is missing`() {}
+	fun `endRound throws NoActiveBoutException when bout is missing`() {
+		val hands = mapOf(attacker to PlayerHand.create(listOf(spade6), attacker), defender to PlayerHand.create(listOf(heart7), defender))
+		val game = Game(hands, listOf(attacker, defender), MutableDeck(mutableListOf()), roundActive = true)
+		game.setPrivateField("currentBout", null)
+
+		assertThrows<NoActiveBoutException> { game.endRound() }
+	}
+
+	private fun Game.setPrivateField(fieldName: String, value: Any?) {
+		val field = Game::class.java.getDeclaredField(fieldName)
+		field.isAccessible = true
+		field.set(this, value)
+	}
 }

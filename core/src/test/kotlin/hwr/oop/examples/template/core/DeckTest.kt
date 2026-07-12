@@ -101,7 +101,9 @@ class DeckTest {
 				PlayerId("P2") to PlayerHand.create(id = PlayerId("P2"))
 			),
 			players = listOf(PlayerId("P1"), PlayerId("P2")),
-			deck = MutableDeck(mutableListOf())
+			deck = MutableDeck(mutableListOf()),
+					trump = Trump.of(Suit.HEARTS)
+			
 		)
 		assertThat(emptyGame.isDeckEmpty()).isTrue()
 		

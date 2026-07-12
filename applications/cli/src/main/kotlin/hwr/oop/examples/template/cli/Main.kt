@@ -6,6 +6,7 @@ import com.github.ajalt.clikt.core.subcommands
 import hwr.oop.examples.template.FileSystemPersistence
 import hwr.oop.examples.template.FileSystemPersistenceConfiguration
 import hwr.oop.examples.template.SqlPersistence
+import hwr.oop.examples.template.core.GamePersistence
 import hwr.oop.examples.template.config.AppConfig
 import hwr.oop.examples.template.config.ConfigLoader
 import hwr.oop.examples.template.config.PersistenceType
@@ -20,19 +21,20 @@ fun main(args: Array<String>) {
 	val persistence = buildPersistence(appConfig)
 	ExampleBaseCommand()
 		.subcommands(
-			StartGameCommand(),
+			StartGameCommand(persistence),
 			OnGameIdCommand().subcommands(
-				GetGameCommand(),
-				AttackCommand(),
-				DefendCommand(),
-				SupplyCommand(),
-				PassCommand(),
+				GetGameCommand(persistence),
+				GetPlayerHandCommand(persistence),
+				AttackCommand(persistence),
+				DefendCommand(persistence),
+				SupplyCommand(persistence),
+				PassCommand(persistence),
 			),
 		)
 		.main(args)
 }
 
-private fun buildPersistence(appConfig: AppConfig): Any {
+private fun buildPersistence(appConfig: AppConfig): GamePersistence {
 	return when (appConfig.persistence) {
 		PersistenceType.SQL -> SqlPersistence(
 			appConfig.sql.jdbcUrl,
@@ -47,4 +49,3 @@ private fun buildPersistence(appConfig: AppConfig): Any {
 		)
 	}
 }
-

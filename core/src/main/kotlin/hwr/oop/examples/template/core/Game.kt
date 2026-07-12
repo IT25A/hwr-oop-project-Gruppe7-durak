@@ -8,11 +8,12 @@ class Game(
 	private val players: List<PlayerId>,
 	private var deck: MutableDeck,
 	private val discard: DiscardPile = DiscardPile(),
-	private val trump: Suit = Suit.HEARTS,
+	private val trump: Trump = Trump.of(Suit.HEARTS),
 	private var currentAttackerIndex: Int = 0,
 	private var currentDefenderIndex: Int = 1,
 	private var roundActive: Boolean = false,
 	private val roundCardPairings: MutableMap<Card, Card?> = mutableMapOf(),
+	private val supplyPasses: MutableSet<PlayerId> = mutableSetOf(),
 	private var currentRoundAttackers: MutableList<PlayerId> = mutableListOf(),
 	private var currentBout: Bout? = null,
 ) {
@@ -25,11 +26,13 @@ class Game(
 	companion object {
 		fun create(playerIds: List<PlayerId>): Game {
 			val playercount = playerIds.size
-			if (playercount !in 2..4) {
+			if (playercount !in 2..6) {
 				throw InvalidPlayerNumberException("$playercount")
 			}
 			
 			val deckMutable = Deck.createRandomDeck().toMutableDeck()
+			val (_, trump) = Trump.drawFromDeck(deckMutable)
+			
 			val handsOfPlayers = mutableMapOf<PlayerId, PlayerHand>()
 			
 			
@@ -43,6 +46,7 @@ class Game(
 				handsOfPlayers = handsOfPlayers,
 				players = playerIds,
 				deck = deckMutable,
+			  trump = trump,
 				currentAttackerIndex = 0,
 				currentDefenderIndex = 1,
 				currentRoundAttackers = mutableListOf(playerIds[0]),
@@ -54,12 +58,13 @@ class Game(
 	
 	private fun initRound() {
 		roundCardPairings.clear()
+		supplyPasses.clear()
 		currentRoundAttackers.clear()
 		currentRoundAttackers.add(getAttacker())
 
 		val attackerHand = handsOfPlayers[getAttacker()] ?: PlayerHand.create(id = getAttacker())
 		val defenderHand = handsOfPlayers[getDefender()] ?: PlayerHand.create(id = getDefender())
-		currentBout = Bout(attackerHand, defenderHand, trump)
+		currentBout = Bout(attackerHand, defenderHand, trump.suit())
 
 		roundActive = true
 	}
@@ -67,6 +72,8 @@ class Game(
 	fun getAttacker(): PlayerId = players[currentAttackerIndex]
 	
 	fun getDefender(): PlayerId = players[currentDefenderIndex]
+
+	fun getPlayers(): List<PlayerId> = players.toList()
 	
 	fun getPlayerHand(playerId: PlayerId): PlayerHand? = handsOfPlayers[playerId]
 	
@@ -75,9 +82,12 @@ class Game(
 	fun getCurrentRoundAttackers(): List<PlayerId> = currentRoundAttackers.toList()
 	
 	fun getRoundCardPairings(): Map<Card, Card?> = roundCardPairings.toMap()
-	
-	
-	
+
+	fun getSupplyPasses(): List<PlayerId> = supplyPasses.toList()
+
+	fun getDeckCards(): List<Card> = deck.cards.toList()
+
+	fun getTrumpSuit(): Suit = trump.suit()
 	
 	fun attackWithCard(card: Card): Game {
 		if (!roundActive) {
@@ -106,6 +116,7 @@ class Game(
 		}
 		
 		roundCardPairings[card] = null
+		supplyPasses.clear()
 		
 		return this
 	}
@@ -151,6 +162,7 @@ class Game(
 		
 		
 		roundCardPairings[card] = null
+		supplyPasses.clear()
 		
 		return this
 	}
@@ -181,6 +193,38 @@ class Game(
 		}
 		
 		roundCardPairings[attackingCard] = defendingCard
+		
+		return this
+	}
+
+	fun supplyCard(playerId: PlayerId, card: Card): Game {
+		if (playerId == getAttacker()) {
+			return attackWithCard(card)
+		}
+		return joinAttack(playerId, card)
+	}
+
+	fun passSupply(playerId: PlayerId): Game {
+		if (!roundActive) {
+			throw NoActiveRoundException()
+		}
+		
+		if (playerId == getDefender()) {
+			throw DefenderCanNotPassException()
+		}
+		
+		if (!players.contains(playerId)) {
+			throw JoinerNotFoundException()
+		}
+		
+		if (!supplyPasses.add(playerId)) {
+			throw PlayerAlreadyPassedSupplyException(playerId.asString())
+		}
+		
+		val nonDefendingPlayers = players.filterNot { it == getDefender() }
+		if (nonDefendingPlayers.all { it in supplyPasses }) {
+			endRound()
+		}
 		
 		return this
 	}
@@ -274,6 +318,7 @@ class Game(
 	fun getGameStatus(): String {
 		return """
 			|=== DURAK GAME STATUS ===
+			|Trump Suit: ${trump.suit()}
 			|Current Attacker: ${getAttacker()}
 			|Current Defender: ${getDefender()}
 			|Round Active: $roundActive

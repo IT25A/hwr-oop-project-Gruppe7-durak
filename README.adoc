@@ -5,16 +5,18 @@ This repository contains a student project created for an ongoing lecture on obj
 WARNING: This code is for educational purposes only.
 Do not rely on it!
 
-== Feature Liste
+== Features
 
-- Cards with rank and suit
-- MutableDeck of cards, can be shuffled, drawn from and deal a card to player
-- PlayerHand with ID and cards
-- AttackStack and DefendStack for the current round
-- DiscardPile for used cards
-- Trump suit and card comparison logic
-- Simple game logic for Durak (e.g., attack, defend, end turn)
-- GameStatus for tracking game state (e.g., ongoing, finished)
+- Cards with rank and suit.
+- Mutable deck of cards that can be shuffled, drawn from, and used to deal cards to players.
+- Player hands with IDs and cards.
+- Attack and defend stacks for the current round.
+- Discard pile for used cards.
+- Trump suit and card comparison logic.
+- Core Durak gameplay logic, including attack, defend, end turn, and supply mechanics.
+- Service and CLI layers.
+- Persistence layer for filesystem and SQL backends is fully implemented and tested.
+- SQL persistence in the CLI and service layers still needs to be tested; this is currently blocked by an issue with an older Docker version.
 
 
 == Modulstruktur

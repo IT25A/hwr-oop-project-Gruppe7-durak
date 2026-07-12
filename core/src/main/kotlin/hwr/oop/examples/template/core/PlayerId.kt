@@ -5,5 +5,5 @@ import kotlinx.serialization.Serializable
 @Serializable
 @JvmInline
 value class PlayerId(private val value: String) {
-
+	fun asString(): String = value
 }

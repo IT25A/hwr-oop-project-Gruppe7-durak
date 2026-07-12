@@ -4,8 +4,12 @@ import com.github.ajalt.clikt.core.CliktCommand
 import com.github.ajalt.clikt.core.requireObject
 import com.github.ajalt.clikt.parameters.options.option
 import com.github.ajalt.clikt.parameters.options.required
+import hwr.oop.examples.template.core.GamePersistence
+import hwr.oop.examples.template.core.PlayerId
 
-class AttackCommand : CliktCommand(name = "attack") {
+class AttackCommand(
+	private val persistence: GamePersistence? = null,
+) : CliktCommand(name = "attack") {
 	private val gameId by requireObject<String>()
 	private val playerId by option("--player-id", help = "The ID of the attacking player.").required()
 	private val card by option(
@@ -13,5 +17,11 @@ class AttackCommand : CliktCommand(name = "attack") {
 		help = "The card to play, encoded as a string (e.g. define your own format)."
 	).required()
 	
-	override fun run(): Unit = TODO()
+	override fun run() {
+		val gamePersistence = requireNotNull(persistence) { "Persistence is not configured" }
+		val game = gamePersistence.loadGame(gameId)
+		game.supplyCard(PlayerId(playerId), parseCard(card))
+		gamePersistence.saveGame(gameId, game)
+		game.printState()
+	}
 }

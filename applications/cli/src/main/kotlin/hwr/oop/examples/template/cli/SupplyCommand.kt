@@ -4,8 +4,12 @@ import com.github.ajalt.clikt.core.CliktCommand
 import com.github.ajalt.clikt.core.requireObject
 import com.github.ajalt.clikt.parameters.options.option
 import com.github.ajalt.clikt.parameters.options.required
+import hwr.oop.examples.template.core.GamePersistence
+import hwr.oop.examples.template.core.PlayerId
 
-class SupplyCommand : CliktCommand(name = "supply") {
+class SupplyCommand(
+	private val persistence: GamePersistence? = null,
+) : CliktCommand(name = "supply") {
 	private val gameId by requireObject<String>()
 	private val playerId by option(
 		"--player-id",
@@ -16,5 +20,11 @@ class SupplyCommand : CliktCommand(name = "supply") {
 		help = "The card to supply, encoded as a string (e.g. define your own format)."
 	).required()
 	
-	override fun run(): Unit = TODO()
+	override fun run() {
+		val gamePersistence = requireNotNull(persistence) { "Persistence is not configured" }
+		val game = gamePersistence.loadGame(gameId)
+		game.supplyCard(PlayerId(playerId), parseCard(card))
+		gamePersistence.saveGame(gameId, game)
+		game.printState()
+	}
 }

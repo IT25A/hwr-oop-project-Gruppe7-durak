@@ -1,6 +1,7 @@
 package hwr.oop.examples.template.service
 
 import hwr.oop.examples.template.core.GameNotFoundException
+import hwr.oop.examples.template.core.GameRuleException
 import hwr.oop.examples.template.service.model.ErrorResponse
 import org.springframework.http.HttpStatus
 import org.springframework.http.ResponseEntity
@@ -26,11 +27,36 @@ class ControllerAdvice {
 	}
 	
 	@ExceptionHandler(GameNotFoundException::class)
-	fun handleGameNotFoundException(ex: GameNotFoundException): ResponseEntity<String> {
-		return ResponseEntity
-			.status(HttpStatus.NOT_FOUND)
-			.body(ex.message)
+	fun handleGameNotFoundException(ex: GameNotFoundException): ResponseEntity<ErrorResponse> {
+		val errorResponse = ErrorResponse(
+			/*status =*/ HttpStatus.NOT_FOUND.value(),
+			/*error =*/ HttpStatus.NOT_FOUND.reasonPhrase,
+			/*message =*/ ex.message ?: "Not found",
+		)
+		return ResponseEntity.status(HttpStatus.NOT_FOUND)
+			.body(errorResponse)
+	}
+
+	@ExceptionHandler(GameRuleException::class)
+	fun handleGameRuleException(ex: GameRuleException): ResponseEntity<ErrorResponse> {
+		val errorResponse = ErrorResponse(
+			/*status =*/ HttpStatus.BAD_REQUEST.value(),
+			/*error =*/ HttpStatus.BAD_REQUEST.reasonPhrase,
+			/*message =*/ ex.message ?: "Bad request",
+		)
+		return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+			.body(errorResponse)
+	}
+
+	@ExceptionHandler(IllegalArgumentException::class)
+	fun handleIllegalArgumentException(ex: IllegalArgumentException): ResponseEntity<ErrorResponse> {
+		val errorResponse = ErrorResponse(
+			/*status =*/ HttpStatus.BAD_REQUEST.value(),
+			/*error =*/ HttpStatus.BAD_REQUEST.reasonPhrase,
+			/*message =*/ ex.message ?: "Bad request",
+		)
+		return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+			.body(errorResponse)
 	}
 	
 }
-
